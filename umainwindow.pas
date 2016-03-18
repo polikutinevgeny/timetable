@@ -6,21 +6,19 @@ interface
 
 uses
   Classes, SysUtils, IBConnection, sqldb, db, FileUtil, Forms, Controls,
-  Graphics, Dialogs, DBGrids, Menus, StdCtrls, UShowingWindow;
+  Graphics, Dialogs, DBGrids, Menus, StdCtrls, UDirectoryWindow, UMetadata;
 
 type
 
   { TMainWindow }
 
   TMainWindow = class(TForm)
-    IBConnection: TIBConnection;
     AboutMI: TMenuItem;
     StartupLabel: TLabel;
     MainMenu: TMainMenu;
     FileMI: TMenuItem;
     ExitMI: TMenuItem;
     DirectoriesMI: TMenuItem;
-    SQLTransaction: TSQLTransaction;
     procedure AboutMIClick(Sender: TObject);
     procedure ExitMIClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -36,47 +34,30 @@ var
 
 implementation
 
-var
-  TableNames: array of String;
-  ReadableNames: array of String;
-
-procedure RegisterTable(ATableName: String; AReadableName: String);
-begin
-  SetLength(TableNames, Length(TableNames) + 1);
-  SetLength(ReadableNames, Length(ReadableNames) + 1);
-  TableNames[High(TableNames)] := ATableName;
-  ReadableNames[High(ReadableNames)] := AReadableName;
-end;
-
 {$R *.lfm}
 
 { TMainWindow }
 
 procedure TMainWindow.FormCreate(Sender: TObject);
 var
-  t: TMenuItem;
   i: Integer;
+  m: TMenuItem;
 begin
-  for i := 0 to High(TableNames) do
+  for i := 0 to High(Metadata.Tables) do
   begin
-    t := TMenuItem.Create(DirectoriesMI);
-    t.Caption := ReadableNames[i];
-    t.OnClick := @DirectoryMIClick;
-    t.Tag := i;
-    DirectoriesMI.Add(t);
+    m := TMenuItem.Create(MainMenu);
+    m.Caption := Metadata.Tables[i].DisplayName;
+    m.Tag := i;
+    m.OnClick := @DirectoryMIClick;
+    DirectoriesMI.Add(m);
   end;
 end;
 
 procedure TMainWindow.DirectoryMIClick(Sender: TObject);
-var
-  f: TShowingForm;
+var f: TDirectoryForm;
 begin
-  f := TShowingForm.Create(nil);
-  f.SQLQuery.Active := False;
-  f.SQLQuery.SQL.Text := 'SELECT * FROM ' +
-    TableNames[(Sender as TMenuItem).Tag];
-  f.SQLQuery.Active := True;
-  f.Caption := ReadableNames[(Sender as TMenuItem).Tag];
+  f := TDirectoryForm.Create(nil);
+  f.CurrentTable := (Sender as TMenuItem).Tag;
   f.Show;
 end;
 
@@ -90,15 +71,5 @@ begin
   ShowMessage('Timetable by Polikutin Evgeny'#13#10'B8103a, 2015');
 end;
 
-initialization
-  RegisterTable('Groups', 'Groups');
-  RegisterTable('Teachers', 'Teachers');
-  RegisterTable('Lessons', 'Lessons');
-  RegisterTable('Classrooms', 'Classrooms');
-  RegisterTable('Weekdays', 'Weekdays');
-  RegisterTable('Lessons_Times', 'Lesson times');
-  RegisterTable('Lessons_Types', 'Lesson types');
-  RegisterTable('Timetable', 'Timetable');
-  RegisterTable('FullTimetable', 'Full timetable');
 end.
 

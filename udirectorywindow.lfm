@@ -1,17 +1,20 @@
-object ShowingForm: TShowingForm
+object DirectoryForm: TDirectoryForm
   Left = 582
-  Height = 568
+  Height = 700
   Top = 112
-  Width = 987
-  ClientHeight = 568
-  ClientWidth = 987
+  Width = 900
+  ClientHeight = 700
+  ClientWidth = 900
+  OnShow = FormShow
   LCLVersion = '1.6.0.4'
   object DBGrid: TDBGrid
+    AnchorSideBottom.Control = FilterSB
     Left = 0
-    Height = 568
+    Height = 550
     Top = 0
-    Width = 987
-    Align = alClient
+    Width = 900
+    Align = alTop
+    Anchors = [akTop, akLeft, akRight, akBottom]
     Color = clWindow
     Columns = <>
     DataSource = DataSource
@@ -19,18 +22,28 @@ object ShowingForm: TShowingForm
     ReadOnly = True
     TabOrder = 0
   end
+  object FilterSB: TScrollBox
+    Left = 0
+    Height = 150
+    Top = 550
+    Width = 900
+    HorzScrollBar.Page = 1
+    VertScrollBar.Page = 1
+    Align = alBottom
+    TabOrder = 1
+  end
   object DataSource: TDataSource
     DataSet = SQLQuery
-    left = 40
+    left = 800
     top = 8
   end
   object SQLQuery: TSQLQuery
     FieldDefs = <>
-    Database = MainWindow.IBConnection
-    Transaction = MainWindow.SQLTransaction
+    Database = DB.IBConnection
+    Transaction = DB.SQLTransaction
     Options = []
     Params = <>
-    left = 80
+    left = 832
     top = 8
   end
 end

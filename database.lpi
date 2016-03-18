@@ -39,7 +39,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="5">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -53,13 +53,25 @@
         <UnitName Value="UMainWindow"/>
       </Unit1>
       <Unit2>
-        <Filename Value="ushowingwindow.pas"/>
+        <Filename Value="udirectorywindow.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="ShowingForm"/>
+        <ComponentName Value="DirectoryForm"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="UShowingWindow"/>
+        <UnitName Value="UDirectoryWindow"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="umetadata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UMetadata"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="udb.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DB"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="UDB"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
