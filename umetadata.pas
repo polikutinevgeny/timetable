@@ -35,14 +35,18 @@ type
   end;
 
   { TTable }
+  TStringArray = array of string;
 
   TTable = class
+    private
+      function GetColNames: TStringArray;
     public
       Cols: array of TCol;
       SQLName: String;
       DisplayName: String;
       constructor Create(ASQLName, ADisplayName: String);
       procedure AddCol(ACol: TCol);
+      property ColNames: TStringArray read GetColNames;
   end;
 
   { TMetadata }
@@ -111,6 +115,16 @@ end;
 
 { TTable }
 
+function TTable.GetColNames: TStringArray;
+var i: Integer;
+begin
+  SetLength(Result, Length(Cols));
+  for i := 0 to High(Cols) do
+  begin
+    Result[i] := Cols[i].DisplayName;
+  end;
+end;
+
 constructor TTable.Create(ASQLName, ADisplayName: String);
 begin
   SQLName := ASQLName;
@@ -131,17 +145,18 @@ begin
   SQLName := ASQLName;
   DisplayName := ADisplayName;
   DataType := ADataType;
-  ARelationship := ARelationship;
+  Relationship := ARelationship;
 end;
 
 initialization
   Metadata := TMetadata.Create;
+  //Initializing metadata
   Metadata.RegisterTable('Groups', 'Groups', [
     TCol.Create('id', 'ID', dtInteger, nil),
-    TCol.Create('name', 'Name', dtString, nil)]);
+    TCol.Create('name', 'Group', dtString, nil)]);
   Metadata.RegisterTable('Lessons', 'Lessons', [
     TCol.Create('id', 'ID', dtInteger, nil),
-    TCol.Create('name', 'Name', dtString, nil)]);
+    TCol.Create('name', 'Lesson', dtString, nil)]);
   Metadata.RegisterTable('Teachers', 'Teachers', [
     TCol.Create('id', 'ID', dtInteger, nil),
     TCol.Create('last_name', 'Last name', dtString, nil),
@@ -149,17 +164,17 @@ initialization
     TCol.Create('middle_name', 'Middle name', dtString, nil)]);
   Metadata.RegisterTable('Classrooms', 'Classrooms', [
     TCol.Create('id', 'ID', dtInteger, nil),
-    TCol.Create('name', 'Name', dtString, nil)]);
+    TCol.Create('name', 'Classroom', dtString, nil)]);
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
     TCol.Create('id', 'ID', dtInteger, nil),
     TCol.Create('begin_', 'Starts at', dtInteger, nil),
     TCol.Create('end_', 'Ends at', dtInteger, nil)]);
   Metadata.RegisterTable('Weekdays', 'Weekdays', [
     TCol.Create('id', 'ID', dtInteger, nil),
-    TCol.Create('name', 'Name', dtString, nil)]);
+    TCol.Create('name', 'Weekday', dtString, nil)]);
   Metadata.RegisterTable('Lessons_Types', 'Lesson types', [
     TCol.Create('id', 'ID', dtInteger, nil),
-    TCol.Create('name', 'Name', dtString, nil)]);
+    TCol.Create('name', 'Type', dtString, nil)]);
   Metadata.RegisterTable('Timetable', 'Timetable', [
     TCol.Create('id', 'ID', dtInteger, nil),
     TCol.Create('lesson_id', 'Lesson ID', dtInteger,

@@ -39,7 +39,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="7">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -72,6 +72,16 @@
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="UDB"/>
       </Unit4>
+      <Unit5>
+        <Filename Value="ufilters.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UFilters"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="usqlqueryconstructor.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="USQLQueryConstructor"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

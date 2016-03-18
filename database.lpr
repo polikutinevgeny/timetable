@@ -7,7 +7,8 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB;
+  Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
+  USQLQueryConstructor;
 
 {$R *.res}
 
