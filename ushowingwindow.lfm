@@ -1,0 +1,36 @@
+object ShowingForm: TShowingForm
+  Left = 582
+  Height = 568
+  Top = 112
+  Width = 987
+  ClientHeight = 568
+  ClientWidth = 987
+  LCLVersion = '1.6.0.4'
+  object DBGrid: TDBGrid
+    Left = 0
+    Height = 568
+    Top = 0
+    Width = 987
+    Align = alClient
+    Color = clWindow
+    Columns = <>
+    DataSource = DataSource
+    Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns]
+    ReadOnly = True
+    TabOrder = 0
+  end
+  object DataSource: TDataSource
+    DataSet = SQLQuery
+    left = 40
+    top = 8
+  end
+  object SQLQuery: TSQLQuery
+    FieldDefs = <>
+    Database = MainWindow.IBConnection
+    Transaction = MainWindow.SQLTransaction
+    Options = []
+    Params = <>
+    left = 80
+    top = 8
+  end
+end
