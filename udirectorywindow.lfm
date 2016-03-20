@@ -1,66 +1,106 @@
 object DirectoryForm: TDirectoryForm
-  Left = 582
-  Height = 700
-  Top = 112
+  Left = 590
+  Height = 730
+  Top = 84
   Width = 967
-  ClientHeight = 700
+  ClientHeight = 730
   ClientWidth = 967
+  Constraints.MinHeight = 730
+  OnDestroy = FormDestroy
   OnShow = FormShow
   LCLVersion = '1.6.0.4'
-  object DBGrid: TDBGrid
-    AnchorSideBottom.Control = FilterSB
+  object PairSplitter: TPairSplitter
+    Cursor = crVSplit
     Left = 0
-    Height = 550
+    Height = 730
     Top = 0
     Width = 967
-    Align = alTop
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    Color = clWindow
-    Columns = <>
-    DataSource = DataSource
-    Options = [dgEditing, dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns]
-    ReadOnly = True
-    TabOrder = 0
-  end
-  object FilterSB: TScrollBox
-    AnchorSideRight.Control = FilterControlPanel
-    Left = 0
-    Height = 150
-    Top = 550
-    Width = 824
-    HorzScrollBar.Page = 1
-    VertScrollBar.Page = 1
-    Anchors = [akLeft, akRight, akBottom]
-    TabOrder = 1
-  end
-  object FilterControlPanel: TPanel
-    AnchorSideLeft.Control = FilterSB
-    AnchorSideLeft.Side = asrBottom
-    Left = 824
-    Height = 150
-    Top = 550
-    Width = 143
-    Align = alRight
-    ClientHeight = 150
-    ClientWidth = 143
-    TabOrder = 2
-    object AddFilterBtn: TButton
-      Left = 8
-      Height = 64
-      Top = 8
-      Width = 128
-      Caption = 'Add Filter'
-      OnClick = AddFilterBtnClick
-      TabOrder = 0
+    Align = alClient
+    ParentShowHint = False
+    Position = 500
+    SplitterType = pstVertical
+    object PairSplitterUpperSide: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 500
+      Top = 0
+      Width = 967
+      ClientWidth = 967
+      ClientHeight = 500
+      Constraints.MinHeight = 500
+      object DBGrid: TDBGrid
+        Left = 0
+        Height = 500
+        Top = 0
+        Width = 967
+        Align = alClient
+        Anchors = []
+        Color = clWindow
+        Columns = <>
+        DataSource = DataSource
+        ReadOnly = True
+        TabOrder = 0
+        OnDrawColumnCell = DBGridDrawColumnCell
+      end
     end
-    object RemoveFilterBtn: TButton
-      Left = 8
-      Height = 64
-      Top = 80
-      Width = 128
-      Caption = 'Remove Filter'
-      OnClick = RemoveFilterBtnClick
-      TabOrder = 1
+    object PairSplitterLowerSide: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 225
+      Top = 505
+      Width = 967
+      ClientWidth = 967
+      ClientHeight = 225
+      object FilterSB: TScrollBox
+        Left = 143
+        Height = 225
+        Top = 0
+        Width = 824
+        HorzScrollBar.Page = 1
+        VertScrollBar.Page = 1
+        Align = alClient
+        TabOrder = 0
+      end
+      object FilterControlPanel: TPanel
+        AnchorSideRight.Control = FilterSB
+        Left = 0
+        Height = 225
+        Top = 0
+        Width = 143
+        Align = alLeft
+        ClientHeight = 225
+        ClientWidth = 143
+        TabOrder = 1
+        object AddFilterBtn: TButton
+          Left = 8
+          Height = 64
+          Top = 8
+          Width = 128
+          Caption = 'Add Filter'
+          OnClick = AddFilterBtnClick
+          TabOrder = 0
+        end
+        object RemoveFilterBtn: TButton
+          Left = 8
+          Height = 64
+          Top = 80
+          Width = 128
+          Caption = 'Remove Filter'
+          Enabled = False
+          OnClick = RemoveFilterBtnClick
+          TabOrder = 1
+        end
+        object ExecuteBtn: TButton
+          Left = 8
+          Height = 64
+          Top = 152
+          Width = 128
+          Caption = 'Execute'
+          Enabled = False
+          OnClick = ExecuteBtnClick
+          TabOrder = 2
+        end
+      end
     end
   end
   object DataSource: TDataSource

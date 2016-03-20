@@ -9,25 +9,37 @@ uses
 
 type
 
+  TFilterUpdateEvent = procedure(Sender: TObject) of object;
+
   { TFilter }
 
   TFilter = class
     private
+      FOnFilterUpdate: TFilterUpdateEvent;
       FColCB: TComboBox;
       FActCB: TComboBox;
       FValTE: TEdit;
+      FTable: TTable;
+      FCols: TColArray;
       function GetCol: TCol;
-      function GetActionIndex: Integer;
+      function GetAction: String;
       function GetValue: String;
+      procedure FilterUpdate(Sender: TObject);
     public
-      constructor Create(AScrollbox: TScrollBox; ATable: TTable);
+      constructor Create(AScrollbox: TScrollBox; ATable: TTable;
+        ACols: TColArray);
       property Column: TCol read GetCol;
-      property ActionIndex: Integer read GetActionIndex;
+      property Action: String read GetAction;
       property Value: String read GetValue;
+      property OnFilterUpdate: TFilterUpdateEvent read FOnFilterUpdate
+        write FOnFilterUpdate;
       destructor Destroy; override;
   end;
 
-const Actions = ['=', '>', '<', '>=', '<='];
+  TFilterArray = array of TFilter;
+
+const
+  Actions: array[0..5] of String = ('=', '>', '<', '>=', '<=', 'LIKE');
 
 implementation
 
@@ -35,39 +47,55 @@ implementation
 
 function TFilter.GetCol: TCol;
 begin
-
+  Result := FCols[FColCB.ItemIndex];
 end;
 
-function TFilter.GetAction: TFilterAction;
+function TFilter.GetAction: String;
 begin
-
+  Result := Actions[FActCB.ItemIndex];
 end;
 
 function TFilter.GetValue: String;
 begin
-
+  Result := FValTE.Text;
 end;
 
-constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable);
+procedure TFilter.FilterUpdate(Sender: TObject);
+begin
+  OnFilterUpdate(Sender);
+end;
+
+constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
+  ACols: TColArray);
+var i: Integer;
 begin
   FColCB := TComboBox.Create(AScrollbox);
-  FColCB.Parent := AScrollbox;
-  FColCB.Items.AddStrings(ATable.ColNames);
+  for i := 0 to High(ACols) do
+  begin
+    FColCB.Items.Add(ACols[i].DisplayName);
+    SetLength(FCols, Length(ACols));
+    FCols[i] := ACols[i];
+  end;
   FColCB.ItemIndex := 0;
   FColCB.Top := 10 + AScrollbox.Tag * 40;
   FColCB.Left := 20;
+  FColCB.OnChange := @FilterUpdate;
+  FColCB.Parent := AScrollbox;
   FActCB := TComboBox.Create(AScrollbox);
-  FActCB.Parent := AScrollbox;
   FActCB.Items.AddStrings(Actions);
   FActCB.ItemIndex := 0;
   FActCB.Top := 10 + AScrollbox.Tag * 40;
   FActCB.Left := 120;
+  FActCB.OnChange := @FilterUpdate;
+  FActCB.Parent := AScrollbox;
   FValTE := TEdit.Create(AScrollbox);
-  FValTE.Parent := AScrollbox;
   FValTE.Text := '';
   FValTE.Top := 10 + AScrollbox.Tag * 40;
   FValTE.Left := 220;
+  FValTE.OnChange := @FilterUpdate;
+  FValTE.Parent := AScrollbox;
   AScrollbox.Tag := AScrollbox.Tag + 1;
+  FTable := ATable;
 end;
 
 destructor TFilter.Destroy;
