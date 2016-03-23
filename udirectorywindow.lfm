@@ -96,7 +96,7 @@ object DirectoryForm: TDirectoryForm
           Height = 64
           Top = 152
           Width = 128
-          Caption = 'Execute'
+          Caption = 'Apply'
           Enabled = False
           OnClick = ExecuteBtnClick
           TabOrder = 2

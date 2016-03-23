@@ -111,7 +111,7 @@ begin
       FQuery.ColsAsText, FQuery.TablesAsText, FQuery.FiltersAsText]);
   SQLQuery.Prepare;
   for i := 0 to SQLQuery.Params.Count - 1 do
-    SQLQuery.Params.Items[i].AsString := FQuery.Filters[i].Value;
+    SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
   try
     SQLQuery.Open;
   except
