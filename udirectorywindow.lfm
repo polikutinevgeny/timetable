@@ -81,16 +81,6 @@ object DirectoryForm: TDirectoryForm
           OnClick = AddFilterBtnClick
           TabOrder = 0
         end
-        object RemoveFilterBtn: TButton
-          Left = 8
-          Height = 64
-          Top = 80
-          Width = 128
-          Caption = 'Remove Filter'
-          Enabled = False
-          OnClick = RemoveFilterBtnClick
-          TabOrder = 1
-        end
         object ExecuteBtn: TButton
           Left = 8
           Height = 64
@@ -99,7 +89,7 @@ object DirectoryForm: TDirectoryForm
           Caption = 'Apply'
           Enabled = False
           OnClick = ExecuteBtnClick
-          TabOrder = 2
+          TabOrder = 1
         end
       end
     end

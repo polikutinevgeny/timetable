@@ -19,7 +19,6 @@ type
     PairSplitter: TPairSplitter;
     PairSplitterUpperSide: TPairSplitterSide;
     PairSplitterLowerSide: TPairSplitterSide;
-    RemoveFilterBtn: TButton;
     DataSource: TDataSource;
     DBGrid: TDBGrid;
     FilterSB: TScrollBox;
@@ -32,11 +31,11 @@ type
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure RemoveFilterBtnClick(Sender: TObject);
   private
     FFilters: array of TFilter;
     FQuery: TQuery;
     procedure UpdateStatus(Sender: TObject);
+    procedure RemoveFilter(Sender: TObject);
   public
     CurrentTable: Integer;
     { public declarations }
@@ -49,7 +48,6 @@ implementation
 { TDirectoryForm }
 
 procedure TDirectoryForm.FormShow(Sender: TObject);
-var i: Integer;
 begin
   Caption := Metadata.Tables[CurrentTable].DisplayName;
   SQLQuery.Close;
@@ -60,29 +58,39 @@ begin
   SQLQuery.Open;
 end;
 
-procedure TDirectoryForm.RemoveFilterBtnClick(Sender: TObject);
-begin
-  FreeAndNil(FFilters[High(FFilters)]);
-  SetLength(FFilters, Length(FFilters) - 1);
-  FilterSB.Tag := FilterSB.Tag - 1;
-  if Length(FFilters) = 0 then
-    RemoveFilterBtn.Enabled := False;
-  ExecuteBtn.Enabled := True;
-end;
-
 procedure TDirectoryForm.UpdateStatus(Sender: TObject);
 begin
   ExecuteBtn.Enabled := True;
 end;
 
+procedure TDirectoryForm.RemoveFilter(Sender: TObject);
+var i, j: Integer;
+begin
+  for i := 0 to High(FFilters) do
+  begin
+    if FFilters[i] = Sender then
+    begin
+      FilterSB.Tag := i;
+      FFilters[i].Free;
+      for j := i to High(FFilters) - 1 do
+      begin
+        FFilters[j] := FFilters[j + 1];
+        FFilters[j].Draw(FilterSB);
+      end;
+      SetLength(FFilters, Length(FFilters) - 1);
+      break;
+    end;
+  end;
+end;
+
 procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);
 begin
-  RemoveFilterBtn.Enabled := True;
   ExecuteBtn.Enabled := True;
   SetLength(FFilters, Length(FFilters) + 1);
   FFilters[High(FFilters)] := TFilter.Create(
     FilterSB, Metadata.Tables[CurrentTable], FQuery.Cols);
   FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
+  FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
 end;
 
 procedure TDirectoryForm.DBGridDrawColumnCell(Sender: TObject;
