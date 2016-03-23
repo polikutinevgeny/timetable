@@ -25,6 +25,9 @@ type
       function GetAction: String;
       function GetValue: String;
       procedure FilterUpdate(Sender: TObject);
+      procedure CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
+      procedure CreateActionCB(AScrollbox: TScrollBox);
+      procedure CreateValueTE(AScrollbox: TScrollBox);
     public
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
         ACols: TColArray);
@@ -65,8 +68,7 @@ begin
   OnFilterUpdate(Sender);
 end;
 
-constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
-  ACols: TColArray);
+procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
 var i: Integer;
 begin
   FColCB := TComboBox.Create(AScrollbox);
@@ -79,21 +81,42 @@ begin
   FColCB.ItemIndex := 0;
   FColCB.Top := 10 + AScrollbox.Tag * 40;
   FColCB.Left := 20;
+  FColCB.Width := 150;
+  FColCB.ReadOnly := True;
   FColCB.OnChange := @FilterUpdate;
   FColCB.Parent := AScrollbox;
+end;
+
+procedure TFilter.CreateActionCB(AScrollbox: TScrollBox);
+begin
   FActCB := TComboBox.Create(AScrollbox);
   FActCB.Items.AddStrings(Actions);
   FActCB.ItemIndex := 0;
   FActCB.Top := 10 + AScrollbox.Tag * 40;
-  FActCB.Left := 120;
+  FActCB.Left := 180;
+  FActCB.Width := 80;
+  FActCB.ReadOnly := True;
   FActCB.OnChange := @FilterUpdate;
   FActCB.Parent := AScrollbox;
+end;
+
+procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
+begin
   FValTE := TEdit.Create(AScrollbox);
   FValTE.Text := '';
   FValTE.Top := 10 + AScrollbox.Tag * 40;
-  FValTE.Left := 220;
+  FValTE.Left := 270;
+  FValTE.Width := 300;
   FValTE.OnChange := @FilterUpdate;
   FValTE.Parent := AScrollbox;
+end;
+
+constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
+  ACols: TColArray);
+begin
+  CreateColumnCB(AScrollbox, ACols);
+  CreateActionCB(AScrollbox);
+  CreateValueTE(AScrollbox);
   AScrollbox.Tag := AScrollbox.Tag + 1;
   FTable := ATable;
 end;

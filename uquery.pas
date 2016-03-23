@@ -14,8 +14,8 @@ type
   TQuery = class
     private
       FTables: array of TTable;
+      FCols: TColArray;
       FFilters: TFilterArray;
-      function GetCols: TColArray;
       function GetColsAsText: String;
       function GetTablesAsText: String;
       function GetFiltersAsText: String; //returns parametrized query, without parameters
@@ -27,7 +27,7 @@ type
       property TablesAsText: String read GetTablesAsText;
       property FiltersAsText: String read GetFiltersAsText;
       property Filters: TFilterArray read GetFilters;
-      //property Cols: TColArray read GetCols;
+      property Cols: TColArray read FCols;
   end;
 
 implementation
@@ -44,17 +44,6 @@ begin
         FTables[i].SQLName, FTables[i].Cols[j].SQLName,
         FTables[i].Cols[j].DisplayName]);
   Result[High(Result)] := ' ';
-end;
-
-function TQuery.GetCols: TColArray;
-var i, j: Integer;
-begin
-  for i := 0 to High(FTables) do
-    for j := 0 to High(FTables[i].Cols) do
-    begin
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := FTables[i].Cols[j];
-    end;
 end;
 
 function TQuery.GetTablesAsText: String;
@@ -97,13 +86,19 @@ begin
 end;
 
 constructor TQuery.Create(ATableNumber: Integer; AFilterList: TFilterArray);
-var i: Integer;
+var i, j: Integer;
 begin
   SetLength(FTables, Length(Metadata.Tables[ATableNumber].ForeignKeys) + 1);
   FTables[0] := Metadata.Tables[ATableNumber];
   for i := 1 to High(FTables) do
     FTables[i] := FTables[0].ForeignKeys[i - 1].Relationship.Table;
   SetFilters(AFilterList);
+  for i := 0 to High(FTables) do
+    for j := 0 to High(FTables[i].Cols) do
+    begin
+      SetLength(FCols, Length(FCols) + 1);
+      FCols[High(FCols)] := FTables[i].Cols[j];
+    end;
 end;
 
 end.

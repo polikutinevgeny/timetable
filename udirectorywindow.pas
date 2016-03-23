@@ -54,13 +54,11 @@ procedure TDirectoryForm.FormShow(Sender: TObject);
 var i: Integer;
 begin
   SQLQuery.Active := False;
+  DBGrid.Tag := 0;
   FQuery := TQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := Format('SELECT %s FROM %s', [
     FQuery.ColsAsText, FQuery.TablesAsText]);
   SQLQuery.Active := True;
-  for i := 0 to DBGrid.Columns.Count - 1 do
-    DBGrid.Columns[i].Width := 10 +
-      DBGrid.Canvas.TextWidth(DBGrid.Columns[i].Title.Caption)
 end;
 
 procedure TDirectoryForm.RemoveFilterBtnClick(Sender: TObject);
@@ -90,18 +88,20 @@ end;
 
 procedure TDirectoryForm.DBGridDrawColumnCell(Sender: TObject;
   const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
-var w : Integer;
 begin
-  w := 10 + DBGrid.Canvas.TextExtent(Column.Field.DisplayText).cx;
-  if w > Column.Width then
-    Column.Width := w;
+  if Column.Tag = 1 then
+    exit;
+  Column.Tag := 1;
+  Column.Width := FQuery.Cols[DBGrid.Tag].Width;
+  DBGrid.Tag := DBGrid.Tag + 1;
 end;
 
 procedure TDirectoryForm.ExecuteBtnClick(Sender: TObject);
 var i: Integer;
 begin
+  DBGrid.Tag := 0;
   ExecuteBtn.Enabled := False;
-  SQLQuery.Active := False;
+  SQLQuery.Close;
   FQuery.Free;
   FQuery := TQuery.Create(CurrentTable, FFilters);
   if Length(FFilters) = 0 then
@@ -111,10 +111,19 @@ begin
     SQLQuery.SQL.Text := Format('SELECT %s FROM %s WHERE %s', [
       FQuery.ColsAsText, FQuery.TablesAsText, FQuery.FiltersAsText]);
   SQLQuery.Prepare;
-  i := SQLQuery.Params.Count;
   for i := 0 to SQLQuery.Params.Count - 1 do
     SQLQuery.Params.Items[i].AsString := FQuery.Filters[i].Value;
-  SQLQuery.Active := True;
+  try
+    SQLQuery.Open;
+  except
+    on E: Exception do
+    begin
+      ShowMessage('An exception was raised:'#13#10 + E.Message + #13#10 +
+        'Probably an unacceptable value was entered or an impossible action was ' +
+        'selected.');
+      SQLQuery.Close;
+    end;
+  end;
 end;
 
 procedure TDirectoryForm.FormDestroy(Sender: TObject);
