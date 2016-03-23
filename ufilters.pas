@@ -16,7 +16,7 @@ type
     procedure HandleRelease(var Msg: TMessage); message CM_RELEASE;
   end;
 
-  TFilterUpdateEvent = procedure(Sender: TObject) of object;
+  TFilterUpdateEvent = procedure of object;
   TFilterRemoveEvent = procedure(Sender: TObject) of object;
 
   { TFilter }
@@ -93,13 +93,13 @@ end;
 
 procedure TFilter.FilterUpdate(Sender: TObject);
 begin
-  OnFilterUpdate(Sender);
+  OnFilterUpdate;
 end;
 
 procedure TFilter.FilterRemove(Sender: TObject);
 begin
   FRemoveBtn := nil; //Button will remove itself after click
-  OnFilterUpdate(Sender);
+  OnFilterUpdate;
   OnFilterRemove(Self);
 end;
 

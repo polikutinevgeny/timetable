@@ -34,7 +34,7 @@ type
   private
     FFilters: array of TFilter;
     FQuery: TQuery;
-    procedure UpdateStatus(Sender: TObject);
+    procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
   public
     CurrentTable: Integer;
@@ -57,7 +57,7 @@ begin
   SQLQuery.Open;
 end;
 
-procedure TDirectoryForm.UpdateStatus(Sender: TObject);
+procedure TDirectoryForm.UpdateStatus;
 begin
   ExecuteBtn.Enabled := True;
 end;
