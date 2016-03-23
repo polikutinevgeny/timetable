@@ -5,8 +5,8 @@ unit UMainWindow;
 interface
 
 uses
-  Classes, SysUtils, IBConnection, sqldb, db, FileUtil, Forms, Controls,
-  Graphics, Dialogs, DBGrids, Menus, StdCtrls, UDirectoryWindow, UMetadata;
+  Classes, SysUtils, Forms, Controls,
+  Dialogs, Menus, StdCtrls, UDirectoryWindow, UMetadata;
 
 type
 

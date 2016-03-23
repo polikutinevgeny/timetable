@@ -19,14 +19,14 @@ type
       function GetColsAsText: String;
       function GetTablesAsText: String;
       function GetFiltersAsText: String; //returns parametrized query, without parameters
-      function GetFilters: TFilterArray;
       procedure SetFilters(AFilters: TFilterArray);
+      procedure SetCols;
+      procedure SetTables(ATableNumber: Integer);
     public
       constructor Create(ATableNumber: Integer; AFilterList: TFilterArray);
       property ColsAsText: String read GetColsAsText;
       property TablesAsText: String read GetTablesAsText;
       property FiltersAsText: String read GetFiltersAsText;
-      property Filters: TFilterArray read GetFilters;
       property Cols: TColArray read FCols;
   end;
 
@@ -72,11 +72,6 @@ begin
   end;
 end;
 
-function TQuery.GetFilters: TFilterArray;
-begin
-  Result := FFilters;
-end;
-
 procedure TQuery.SetFilters(AFilters: TFilterArray);
 var i: Integer;
 begin
@@ -85,20 +80,32 @@ begin
     FFilters[i] := AFilters[i];
 end;
 
-constructor TQuery.Create(ATableNumber: Integer; AFilterList: TFilterArray);
+procedure TQuery.SetCols;
 var i, j: Integer;
 begin
-  SetLength(FTables, Length(Metadata.Tables[ATableNumber].ForeignKeys) + 1);
-  FTables[0] := Metadata.Tables[ATableNumber];
-  for i := 1 to High(FTables) do
-    FTables[i] := FTables[0].ForeignKeys[i - 1].Relationship.Table;
-  SetFilters(AFilterList);
   for i := 0 to High(FTables) do
     for j := 0 to High(FTables[i].Cols) do
     begin
       SetLength(FCols, Length(FCols) + 1);
       FCols[High(FCols)] := FTables[i].Cols[j];
     end;
+end;
+
+procedure TQuery.SetTables(ATableNumber: Integer);
+var
+  i: Integer;
+begin
+  SetLength(FTables, Length(Metadata.Tables[ATableNumber].ForeignKeys) + 1);
+    FTables[0] := Metadata.Tables[ATableNumber];
+    for i := 1 to High(FTables) do
+      FTables[i] := FTables[0].ForeignKeys[i - 1].Relationship.Table;
+end;
+
+constructor TQuery.Create(ATableNumber: Integer; AFilterList: TFilterArray);
+begin
+  SetTables(ATableNumber);
+  SetFilters(AFilterList);
+  SetCols;
 end;
 
 end.
