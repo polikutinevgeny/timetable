@@ -55,7 +55,7 @@ begin
       FTables[0].ForeignKeys[i].Relationship.Table.SQLName,
       FTables[0].SQLName, FTables[0].ForeignKeys[i].SQLName,
       FTables[0].ForeignKeys[i].Relationship.Table.SQLName,
-      FTables[0].ForeignKeys[i].Relationship.Col.SQLName]);
+      FTables[0].ForeignKeys[i].Relationship.SQLName]);
 end;
 
 function TQuery.GetFiltersAsText: String; //returns parametrized query

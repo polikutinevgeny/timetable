@@ -13,15 +13,6 @@ type
 
   TDataType = (dtInteger, dtString);
 
-  { TRelationship }
-
-  TRelationship = class
-  public
-    Table: TTable;
-    Col: TCol;
-    constructor Create(ATable: TTable; ACol: TCol);
-  end;
-
   { TCol }
 
   TCol = class
@@ -30,10 +21,10 @@ type
       SQLName: String;
       DisplayName: String;
       DataType: TDataType;
-      Relationship: TRelationship;
+      Relationship: TCol;
       Width: Integer;
       constructor Create(ASQLName, ADisplayName: String; ADataType: TDataType;
-        ARelationship: TRelationship; AWidth: Integer);
+        ARelationship: TCol; AWidth: Integer);
   end;
 
   TColArray = array of TCol;
@@ -42,8 +33,6 @@ type
   TStringArray = array of string;
 
   TTable = class
-    private
-      function GetColNames: TStringArray;
     public
       Cols: TColArray;
       ForeignKeys: TColArray;
@@ -51,7 +40,6 @@ type
       DisplayName: String;
       constructor Create(ASQLName, ADisplayName: String);
       procedure AddCol(ACol: TCol);
-      property ColNames: TStringArray read GetColNames;
   end;
 
   { TMetadata }
@@ -61,21 +49,13 @@ type
       Tables: array of TTable;
       procedure RegisterTable(
         ASQLName, ADisplayName: String; ACols: array of TCol);
-      function GetRelationship(ATableName, AColName: String): TRelationship;
+      function GetRelationship(ATableName, AColName: String): TCol;
   end;
 
 var
   Metadata: TMetadata;
 
 implementation
-
-{ TRelationship }
-
-constructor TRelationship.Create(ATable: TTable; ACol: TCol);
-begin
-  Table := ATable;
-  Col := ACol;
-end;
 
 { TMetadata }
 
@@ -93,7 +73,7 @@ begin
   end;
 end;
 
-function TMetadata.GetRelationship(ATableName, AColName: String): TRelationship;
+function TMetadata.GetRelationship(ATableName, AColName: String): TCol;
 var
   t: TTable;
   c: TCol;
@@ -111,18 +91,10 @@ begin
       c := t.Cols[i];
       break;
     end;
-  Result := TRelationship.Create(t, c);
+  Result := c;
 end;
 
 { TTable }
-
-function TTable.GetColNames: TStringArray;
-var i: Integer;
-begin
-  SetLength(Result, Length(Cols));
-  for i := 0 to High(Cols) do
-    Result[i] := Cols[i].DisplayName;
-end;
 
 constructor TTable.Create(ASQLName, ADisplayName: String);
 begin
@@ -147,7 +119,7 @@ end;
 { TCol }
 
 constructor TCol.Create(ASQLName, ADisplayName: String; ADataType: TDataType;
-  ARelationship: TRelationship; AWidth: Integer);
+  ARelationship: TCol; AWidth: Integer);
 begin
   SQLName := ASQLName;
   DisplayName := ADisplayName;
@@ -172,16 +144,16 @@ initialization
     TCol.Create('middle_name', 'Middle name', dtString, nil, 200)]);
   Metadata.RegisterTable('Classrooms', 'Classrooms', [
     TCol.Create('id', 'Classroom ID', dtInteger, nil, 120),
-    TCol.Create('name', 'Classroom', dtString, nil, 120)]);
+    TCol.Create('name', 'Classroom', dtString, nil, 110)]);
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
-    TCol.Create('id', 'Lesson time ID', dtInteger, nil, 100),
+    TCol.Create('id', 'Lesson time ID', dtInteger, nil, 130),
     TCol.Create('begin_', 'Starts at', dtString, nil, 100),
     TCol.Create('end_', 'Ends at', dtString, nil, 100)]);
   Metadata.RegisterTable('Weekdays', 'Weekdays', [
     TCol.Create('id', 'Weekday ID', dtInteger, nil, 100),
     TCol.Create('name', 'Weekday', dtString, nil, 120)]);
   Metadata.RegisterTable('Lessons_Types', 'Lesson types', [
-    TCol.Create('id', 'Lesson type ID', dtInteger, nil, 100),
+    TCol.Create('id', 'Lesson type ID', dtInteger, nil, 130),
     TCol.Create('name', 'Type', dtString, nil, 200)]);
   Metadata.RegisterTable('Timetable', 'Timetable', [
     TCol.Create('id', 'ID', dtInteger, nil, 40),

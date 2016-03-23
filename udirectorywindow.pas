@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DBGrids, ExtCtrls, StdCtrls, PairSplitter, UDB, UMetadata,
+  DBGrids, ExtCtrls, StdCtrls, PairSplitter, UMetadata,
   UQuery, UFilters, Grids;
 
 type
@@ -29,6 +29,7 @@ type
     procedure DBGridDrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure ExecuteBtnClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure RemoveFilterBtnClick(Sender: TObject);
@@ -41,9 +42,6 @@ type
     { public declarations }
   end;
 
-var
-  DirectoryForm: TDirectoryForm;
-
 implementation
 
 {$R *.lfm}
@@ -53,12 +51,13 @@ implementation
 procedure TDirectoryForm.FormShow(Sender: TObject);
 var i: Integer;
 begin
-  SQLQuery.Active := False;
+  Caption := Metadata.Tables[CurrentTable].DisplayName;
+  SQLQuery.Close;
   DBGrid.Tag := 0;
   FQuery := TQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := Format('SELECT %s FROM %s', [
     FQuery.ColsAsText, FQuery.TablesAsText]);
-  SQLQuery.Active := True;
+  SQLQuery.Open;
 end;
 
 procedure TDirectoryForm.RemoveFilterBtnClick(Sender: TObject);
@@ -119,11 +118,17 @@ begin
     on E: Exception do
     begin
       ShowMessage('An exception was raised:'#13#10 + E.Message + #13#10 +
-        'Probably an unacceptable value was entered or an impossible action was ' +
-        'selected.');
+        'Probably an unacceptable value was entered or an impossible action was' +
+        ' selected.');
       SQLQuery.Close;
     end;
   end;
+end;
+
+procedure TDirectoryForm.FormClose(Sender: TObject;
+  var CloseAction: TCloseAction);
+begin
+  CloseAction := caFree;
 end;
 
 procedure TDirectoryForm.FormDestroy(Sender: TObject);

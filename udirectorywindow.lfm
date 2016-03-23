@@ -6,6 +6,7 @@ object DirectoryForm: TDirectoryForm
   ClientHeight = 730
   ClientWidth = 967
   Constraints.MinHeight = 730
+  OnClose = FormClose
   OnDestroy = FormDestroy
   OnShow = FormShow
   LCLVersion = '1.6.0.4'
