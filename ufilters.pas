@@ -98,7 +98,7 @@ end;
 
 procedure TFilter.FilterRemove(Sender: TObject);
 begin
-  FRemoveBtn := nil;
+  FRemoveBtn := nil; //Button will remove itself after click
   OnFilterUpdate(Sender);
   OnFilterRemove(Self);
 end;
@@ -113,9 +113,8 @@ begin
     SetLength(FCols, Length(ACols));
     FCols[i] := ACols[i];
   end;
+  FColumnCB.Visible := False;
   FColumnCB.ItemIndex := 0;
-  FColumnCB.Top := 20 + AScrollbox.Tag * 40;
-  FColumnCB.Left := 20;
   FColumnCB.Width := 150;
   FColumnCB.ReadOnly := True;
   FColumnCB.OnChange := @FilterUpdate;
@@ -125,10 +124,9 @@ end;
 procedure TFilter.CreateActionCB(AScrollbox: TScrollBox);
 begin
   FActionCB := TComboBox.Create(AScrollbox);
+  FActionCB.Visible := False;
   FActionCB.Items.AddStrings(Actions);
   FActionCB.ItemIndex := 0;
-  FActionCB.Top := 20 + AScrollbox.Tag * 40;
-  FActionCB.Left := 180;
   FActionCB.Width := 80;
   FActionCB.ReadOnly := True;
   FActionCB.OnChange := @FilterUpdate;
@@ -138,9 +136,8 @@ end;
 procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
 begin
   FValueTE := TEdit.Create(AScrollbox);
+  FValueTE.Visible := False;
   FValueTE.Text := '';
-  FValueTE.Top := 20 + AScrollbox.Tag * 40;
-  FValueTE.Left := 270;
   FValueTE.Width := 300;
   FValueTE.OnChange := @FilterUpdate;
   FValueTE.Parent := AScrollbox;
@@ -149,9 +146,8 @@ end;
 procedure TFilter.CreateRemoveBtn(AScrollbox: TScrollBox);
 begin
   FRemoveBtn := TRemoveButton.Create(AScrollbox);
+  FRemoveBtn.Visible := False;
   FRemoveBtn.Caption := '-';
-  FRemoveBtn.Top := 20 + AScrollbox.Tag * 40;
-  FRemoveBtn.Left := 590;
   FRemoveBtn.Width := 34;
   FRemoveBtn.Height := 34;
   FRemoveBtn.Parent := AScrollbox;
@@ -165,7 +161,7 @@ begin
   CreateActionCB(AScrollbox);
   CreateValueTE(AScrollbox);
   CreateRemoveBtn(AScrollbox);
-  AScrollbox.Tag := AScrollbox.Tag + 1;
+  Draw(AScrollbox);
   FTable := ATable;
 end;
 
@@ -179,6 +175,10 @@ begin
   FValueTE.Left := 270;
   FRemoveBtn.Top := 20 + AScrollbox.Tag * 40;
   FRemoveBtn.Left := 590;
+  FColumnCB.Visible := True;
+  FActionCB.Visible := True;
+  FValueTE.Visible := True;
+  FRemoveBtn.Visible := True;
   AScrollbox.Tag := AScrollbox.Tag + 1;
 end;
 

@@ -23,10 +23,6 @@ type
     procedure ExitMIClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure DirectoryMIClick(Sender: TObject);
-  private
-    { private declarations }
-  public
-    { public declarations }
   end;
 
 var

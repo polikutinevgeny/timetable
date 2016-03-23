@@ -38,7 +38,6 @@ type
     procedure RemoveFilter(Sender: TObject);
   public
     CurrentTable: Integer;
-    { public declarations }
   end;
 
 implementation
@@ -125,9 +124,9 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage('An exception was raised:'#13#10 + E.Message + #13#10 +
+      MessageDlg('Error', 'An exception was raised:'#13#10 + E.Message + #13#10 +
         'Probably an unacceptable value was entered or an impossible action was' +
-        ' selected.');
+        ' selected.', mtError, [mbOK], 0);
       SQLQuery.Close;
     end;
   end;

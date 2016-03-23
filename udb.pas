@@ -14,10 +14,6 @@ type
   TDB = class(TDataModule)
     IBConnection: TIBConnection;
     SQLTransaction: TSQLTransaction;
-  private
-    { private declarations }
-  public
-    { public declarations }
   end;
 
 var
