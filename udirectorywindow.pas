@@ -56,8 +56,8 @@ begin
   SQLQuery.Close;
   DBGrid.Tag := 0;
   FQuery := TQuery.Create(CurrentTable, nil);
-  SQLQuery.SQL.Text := Format('SELECT %s FROM %s', [
-    FQuery.ColsAsText, FQuery.TablesAsText]);
+  SQLQuery.SQL.Text := Format('%s %s', [
+    FQuery.SelectAsText, FQuery.FromAsText]);
   SQLQuery.Open;
 end;
 
@@ -113,12 +113,8 @@ begin
   SQLQuery.Close;
   FQuery.Free;
   FQuery := TQuery.Create(CurrentTable, FFilters);
-  if Length(FFilters) = 0 then
-    SQLQuery.SQL.Text := Format('SELECT %s FROM %s', [
-      FQuery.ColsAsText, FQuery.TablesAsText])
-  else
-    SQLQuery.SQL.Text := Format('SELECT %s FROM %s WHERE %s', [
-      FQuery.ColsAsText, FQuery.TablesAsText, FQuery.FiltersAsText]);
+  SQLQuery.SQL.Text := Format('%s %s %s', [
+    FQuery.SelectAsText, FQuery.FromAsText, FQuery.FiltersAsText]);
   SQLQuery.Prepare;
   for i := 0 to SQLQuery.Params.Count - 1 do
     SQLQuery.Params.Items[i].AsString := FFilters[i].Value;

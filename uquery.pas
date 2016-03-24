@@ -16,16 +16,16 @@ type
       FTables: array of TTable;
       FCols: TColArray;
       FFilters: TFilterArray;
-      function GetColsAsText: String;
-      function GetTablesAsText: String;
+      function GetSelectAsText: String;
+      function GetFromAsText: String;
       function GetFiltersAsText: String; //returns parametrized query, without parameters
       procedure SetFilters(AFilters: TFilterArray);
       procedure SetCols;
       procedure SetTables(ATableNumber: Integer);
     public
       constructor Create(ATableNumber: Integer; AFilterList: TFilterArray);
-      property ColsAsText: String read GetColsAsText;
-      property TablesAsText: String read GetTablesAsText;
+      property SelectAsText: String read GetSelectAsText;
+      property FromAsText: String read GetFromAsText;
       property FiltersAsText: String read GetFiltersAsText;
       property Cols: TColArray read FCols;
   end;
@@ -34,10 +34,10 @@ implementation
 
 { TQuery }
 
-function TQuery.GetColsAsText: String;
+function TQuery.GetSelectAsText: String;
 var i, j: Integer;
 begin
-  Result := '';
+  Result := 'SELECT ';
   for i := 0 to High(FTables) do
     for j := 0 to High(FTables[i].Cols) do
       Result += Format('%s.%s AS "%s",', [
@@ -46,10 +46,10 @@ begin
   Result[High(Result)] := ' ';
 end;
 
-function TQuery.GetTablesAsText: String;
+function TQuery.GetFromAsText: String;
 var i: Integer;
 begin
-  Result := Format('%s ', [FTables[0].SQLName]);
+  Result := Format('FROM %s ', [FTables[0].SQLName]);
   for i := 0 to High(FTables[0].ForeignKeys) do
     Result += Format('INNER JOIN %s ON %s.%s = %s.%s ', [
       FTables[0].ForeignKeys[i].Relationship.Table.SQLName,
@@ -61,7 +61,12 @@ end;
 function TQuery.GetFiltersAsText: String; //returns parametrized query
 var i: Integer;
 begin
-  Result := ' ';
+  if Length(FFilters) = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+  Result := 'WHERE ';
   for i := 0 to High(FFilters) do
   begin
     Result += Format('%s.%s %s %s ', [
