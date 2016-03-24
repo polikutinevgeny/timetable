@@ -11,7 +11,7 @@ type
   TTable = class;
   TCol = class;
 
-  TDataType = (dtInteger, dtString);
+  TDataType = (dtInteger, dtString); //Is it really needed?
 
   { TCol }
 
@@ -30,7 +30,6 @@ type
   TColArray = array of TCol;
 
   { TTable }
-  TStringArray = array of string;
 
   TTable = class
     public

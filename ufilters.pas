@@ -58,6 +58,8 @@ type
 
 const
   Actions: array[0..5] of String = ('=', '>', '<', '>=', '<=', 'LIKE');
+  Interval: Integer = 40;
+  UpperPadding: Integer = 20;
 
 implementation
 
@@ -101,6 +103,7 @@ begin
   FRemoveBtn := nil; //Button will remove itself after click
   OnFilterUpdate;
   OnFilterRemove(Self);
+  Self.Free;
 end;
 
 procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
@@ -167,13 +170,13 @@ end;
 
 procedure TFilter.Draw(AScrollbox: TScrollBox);
 begin
-  FColumnCB.Top := 20 + AScrollbox.Tag * 40;
+  FColumnCB.Top := UpperPadding + AScrollbox.Tag * Interval;
   FColumnCB.Left := 20;
-  FActionCB.Top := 20 + AScrollbox.Tag * 40;
+  FActionCB.Top := UpperPadding + AScrollbox.Tag * Interval;
   FActionCB.Left := 180;
-  FValueTE.Top := 20 + AScrollbox.Tag * 40;
+  FValueTE.Top := UpperPadding + AScrollbox.Tag * Interval;
   FValueTE.Left := 270;
-  FRemoveBtn.Top := 20 + AScrollbox.Tag * 40;
+  FRemoveBtn.Top := UpperPadding + AScrollbox.Tag * Interval;
   FRemoveBtn.Left := 590;
   FColumnCB.Visible := True;
   FActionCB.Visible := True;

@@ -70,7 +70,6 @@ begin
     if FFilters[i] = Sender then
     begin
       FilterSB.Tag := i;
-      FFilters[i].Free;
       for j := i to High(FFilters) - 1 do
       begin
         FFilters[j] := FFilters[j + 1];
