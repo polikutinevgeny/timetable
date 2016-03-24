@@ -53,10 +53,10 @@ object DirectoryForm: TDirectoryForm
       ClientWidth = 967
       ClientHeight = 225
       object FilterSB: TScrollBox
-        Left = 143
+        Left = 83
         Height = 225
         Top = 0
-        Width = 824
+        Width = 884
         HorzScrollBar.Page = 1
         VertScrollBar.Page = 1
         Align = alClient
@@ -67,28 +67,33 @@ object DirectoryForm: TDirectoryForm
         Left = 0
         Height = 225
         Top = 0
-        Width = 143
+        Width = 83
         Align = alLeft
         ClientHeight = 225
-        ClientWidth = 143
+        ClientWidth = 83
         TabOrder = 1
-        object AddFilterBtn: TButton
+        object AddFilterBtn: TBitBtn
           Left = 8
           Height = 64
+          Hint = 'Add Filter'
           Top = 8
-          Width = 128
-          Caption = 'Add Filter'
+          Width = 64
           OnClick = AddFilterBtnClick
+          ParentShowHint = False
+          ShowHint = True
           TabOrder = 0
         end
-        object ExecuteBtn: TButton
+        object ExecuteBtn: TBitBtn
           Left = 8
           Height = 64
+          Hint = 'Apply'
           Top = 152
-          Width = 128
-          Caption = 'Apply'
+          Width = 64
           Enabled = False
+          NumGlyphs = 2
           OnClick = ExecuteBtnClick
+          ParentShowHint = False
+          ShowHint = True
           TabOrder = 1
         end
       end

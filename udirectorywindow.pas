@@ -7,15 +7,15 @@ interface
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
   DBGrids, ExtCtrls, StdCtrls, PairSplitter, UMetadata,
-  UQuery, UFilters, Grids;
+  UQuery, UFilters, Grids, Buttons;
 
 type
 
   { TDirectoryForm }
 
   TDirectoryForm = class(TForm)
-    AddFilterBtn: TButton;
-    ExecuteBtn: TButton;
+    AddFilterBtn: TBitBtn;
+    ExecuteBtn: TBitBtn;
     PairSplitter: TPairSplitter;
     PairSplitterUpperSide: TPairSplitterSide;
     PairSplitterLowerSide: TPairSplitterSide;
@@ -42,6 +42,8 @@ type
 
 implementation
 
+var AddGlyph, ApplyGlyph: TBitmap;
+
 {$R *.lfm}
 
 { TDirectoryForm }
@@ -49,6 +51,8 @@ implementation
 procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
   Caption := Metadata.Tables[CurrentTable].DisplayName;
+  AddFilterBtn.Glyph := AddGlyph;
+  ExecuteBtn.Glyph := ApplyGlyph;
   SQLQuery.Close;
   DBGrid.Tag := 0;
   FQuery := TQuery.Create(CurrentTable, nil);
@@ -145,5 +149,10 @@ begin
     FFilters[i].Free;
 end;
 
+initialization
+  AddGlyph := TBitmap.Create;
+  AddGlyph.LoadFromFile('icons/Add.bmp');
+  ApplyGlyph := TBitmap.Create;
+  ApplyGlyph.LoadFromFile('icons/Apply.bmp');
 end.
 

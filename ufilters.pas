@@ -5,13 +5,13 @@ unit UFilters;
 interface
 
 uses
-  Classes, SysUtils, UMetadata, Forms, StdCtrls, LMessages, LCLIntf, messages;
+  Classes, SysUtils, UMetadata, Forms, StdCtrls, LMessages, LCLIntf, messages,
+  Buttons, Graphics;
 
 type
-
   { TRemoveButton }
 
-  TRemoveButton = class(TButton)
+  TRemoveButton = class(TBitBtn)
     procedure Click; override;
     procedure HandleRelease(var Msg: TMessage); message CM_RELEASE;
   end;
@@ -60,6 +60,8 @@ const
   Actions: array[0..5] of String = ('=', '>', '<', '>=', '<=', 'LIKE');
   Interval: Integer = 40;
   UpperPadding: Integer = 20;
+
+var RemoveGlyph: TBitmap;
 
 implementation
 
@@ -150,9 +152,11 @@ procedure TFilter.CreateRemoveBtn(AScrollbox: TScrollBox);
 begin
   FRemoveBtn := TRemoveButton.Create(AScrollbox);
   FRemoveBtn.Visible := False;
-  FRemoveBtn.Caption := '-';
   FRemoveBtn.Width := 34;
   FRemoveBtn.Height := 34;
+  FRemoveBtn.Glyph := RemoveGlyph;
+  FRemoveBtn.Hint := 'Remove filter';
+  FRemoveBtn.ShowHint := True;
   FRemoveBtn.Parent := AScrollbox;
   FRemoveBtn.OnClick := @FilterRemove;
 end;
@@ -193,5 +197,8 @@ begin
   FRemoveBtn.Free;
 end;
 
+initialization
+  RemoveGlyph := TBitmap.Create;
+  RemoveGlyph.LoadFromFile('icons/Remove.bmp');
 end.
 
