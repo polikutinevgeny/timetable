@@ -16,6 +16,7 @@ type
   TDirectoryForm = class(TForm)
     AddFilterBtn: TBitBtn;
     ExecuteBtn: TBitBtn;
+    ImageList: TImageList;
     PairSplitter: TPairSplitter;
     PairSplitterUpperSide: TPairSplitterSide;
     PairSplitterLowerSide: TPairSplitterSide;
@@ -25,8 +26,7 @@ type
     FilterControlPanel: TPanel;
     SQLQuery: TSQLQuery;
     procedure AddFilterBtnClick(Sender: TObject);
-    procedure DBGridDrawColumnCell(Sender: TObject; const Rect: TRect;
-      DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure DBGridTitleClick(Column: TColumn);
     procedure ExecuteBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormDestroy(Sender: TObject);
@@ -34,15 +34,18 @@ type
   private
     FFilters: array of TFilter;
     FQuery: TQuery;
+    FLastColumnSorted: TColumn;
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
+    procedure SetColWidth;
   public
     CurrentTable: Integer;
   end;
 
 implementation
 
-var AddGlyph, ApplyGlyph: TBitmap;
+var
+  AddGlyph, ApplyGlyph: TBitmap;
 
 {$R *.lfm}
 
@@ -54,11 +57,11 @@ begin
   AddFilterBtn.Glyph := AddGlyph;
   ExecuteBtn.Glyph := ApplyGlyph;
   SQLQuery.Close;
-  DBGrid.Tag := 0;
   FQuery := TQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := Format('%s %s', [
     FQuery.SelectAsText, FQuery.FromAsText]);
   SQLQuery.Open;
+  SetColWidth;
 end;
 
 procedure TDirectoryForm.UpdateStatus;
@@ -85,6 +88,13 @@ begin
   end;
 end;
 
+procedure TDirectoryForm.SetColWidth;
+var i: Integer;
+begin
+  for i := 0 to High(FQuery.Cols) do
+    DBGrid.Columns.Items[i].Width := FQuery.Cols[i].Width;
+end;
+
 procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);
 begin
   ExecuteBtn.Enabled := True;
@@ -95,20 +105,52 @@ begin
   FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
 end;
 
-procedure TDirectoryForm.DBGridDrawColumnCell(Sender: TObject;
-  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+procedure TDirectoryForm.DBGridTitleClick(Column: TColumn);
+const
+  ImgArrUp = 0;
+  ImgArrDown = 1;
+var
+  ASC_IndexName, DESC_IndexName: String;
+
+  procedure UpdateIndexes;
+  begin
+    SQLQuery.IndexDefs.Updated := false;
+    SQLQuery.IndexDefs.Update;
+  end;
+
 begin
-  if Column.Tag = 1 then
-    exit;
-  Column.Tag := 1;
-  Column.Width := FQuery.Cols[DBGrid.Tag].Width;
-  DBGrid.Tag := DBGrid.Tag + 1;
+  ASC_IndexName := 'ASC_'+Column.FieldName;
+  DESC_IndexName := 'DESC_'+Column.FieldName;
+  if SQLQuery.IndexDefs.IndexOf(ASC_IndexName) = -1 then
+  begin
+    SQLQuery.AddIndex(ASC_IndexName, column.FieldName, []);
+    UpdateIndexes;
+  end;
+  if SQLQuery.IndexDefs.IndexOf(DESC_IndexName) = -1 then
+  begin
+    SQLQuery.AddIndex(DESC_IndexName, column.FieldName, [ixDescending]);
+    UpdateIndexes;
+  end;
+  Column.Tag := not Column.Tag;
+  if Boolean(Column.Tag) then
+  begin
+    Column.Title.ImageIndex := ImgArrUp;
+    SQLQuery.IndexName := ASC_IndexName;
+  end
+  else
+  begin
+    Column.Title.ImageIndex := ImgArrDown;
+    SQLQuery.IndexName := DESC_IndexName;
+  end;
+  if (FLastColumnSorted <> nil) and (FLastColumnSorted <> Column) then
+    FLastColumnSorted.Title.ImageIndex := -1;
+  FLastColumnSorted := Column;
+  SetColWidth;
 end;
 
 procedure TDirectoryForm.ExecuteBtnClick(Sender: TObject);
 var i: Integer;
 begin
-  DBGrid.Tag := 0;
   ExecuteBtn.Enabled := False;
   SQLQuery.Close;
   FQuery.Free;
@@ -129,6 +171,9 @@ begin
       SQLQuery.Close;
     end;
   end;
+  SetColWidth;
+  if FLastColumnSorted <> nil then
+    FLastColumnSorted.Title.ImageIndex := FLastColumnSorted.Tag;
 end;
 
 procedure TDirectoryForm.FormClose(Sender: TObject;

@@ -135,7 +135,7 @@ initialization
     TCol.Create('name', 'Group', dtString, nil, 120)]);
   Metadata.RegisterTable('Lessons', 'Lessons', [
     TCol.Create('id', 'Lesson ID', dtInteger, nil, 100),
-    TCol.Create('name', 'Lesson', dtString, nil, 400)]);
+    TCol.Create('name', 'Lesson', dtString, nil, 450)]);
   Metadata.RegisterTable('Teachers', 'Teachers', [
     TCol.Create('id', 'Teacher ID', dtInteger, nil, 100),
     TCol.Create('last_name', 'Last name', dtString, nil, 200),
