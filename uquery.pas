@@ -16,17 +16,16 @@ type
       FTables: array of TTable;
       FCols: TColArray;
       FFilters: TFilterArray;
+      function GetQueryAsText: String;
       function GetSelectAsText: String;
       function GetFromAsText: String;
-      function GetFiltersAsText: String; //returns parametrized query, without parameters
+      function GetFiltersAsText: String;
       procedure SetFilters(AFilters: TFilterArray);
       procedure SetCols;
       procedure SetTables(ATableNumber: Integer);
     public
       constructor Create(ATableNumber: Integer; AFilterList: TFilterArray);
-      property SelectAsText: String read GetSelectAsText;
-      property FromAsText: String read GetFromAsText;
-      property FiltersAsText: String read GetFiltersAsText;
+      property QueryAsText: String read GetQueryAsText; //returns parametrized query, without parameters
       property Cols: TColArray read FCols;
   end;
 
@@ -44,6 +43,12 @@ begin
         FTables[i].SQLName, FTables[i].Cols[j].SQLName,
         FTables[i].Cols[j].DisplayName]);
   Result[High(Result)] := ' ';
+end;
+
+function TQuery.GetQueryAsText: String;
+begin
+  Result := Format('%s %s %s', [
+    GetSelectAsText, GetFromAsText, GetFiltersAsText]);
 end;
 
 function TQuery.GetFromAsText: String;

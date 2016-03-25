@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DBGrids, ExtCtrls, StdCtrls, PairSplitter, UMetadata,
+  DBGrids, ExtCtrls, PairSplitter, UMetadata,
   UQuery, UFilters, Grids, Buttons;
 
 type
@@ -58,8 +58,7 @@ begin
   ExecuteBtn.Glyph := ApplyGlyph;
   SQLQuery.Close;
   FQuery := TQuery.Create(CurrentTable, nil);
-  SQLQuery.SQL.Text := Format('%s %s', [
-    FQuery.SelectAsText, FQuery.FromAsText]);
+  SQLQuery.SQL.Text := FQuery.QueryAsText;
   SQLQuery.Open;
   SetColWidth;
 end;
@@ -155,8 +154,7 @@ begin
   SQLQuery.Close;
   FQuery.Free;
   FQuery := TQuery.Create(CurrentTable, FFilters);
-  SQLQuery.SQL.Text := Format('%s %s %s', [
-    FQuery.SelectAsText, FQuery.FromAsText, FQuery.FiltersAsText]);
+  SQLQuery.SQL.Text := FQuery.QueryAsText;
   SQLQuery.Prepare;
   for i := 0 to SQLQuery.Params.Count - 1 do
     SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
@@ -169,6 +167,7 @@ begin
         'Probably an unacceptable value was entered or an impossible action was' +
         ' selected.', mtError, [mbOK], 0);
       SQLQuery.Close;
+      Exit;
     end;
   end;
   SetColWidth;
