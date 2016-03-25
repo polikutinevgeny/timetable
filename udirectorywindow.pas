@@ -118,16 +118,16 @@ var
   end;
 
 begin
-  ASC_IndexName := 'ASC_'+Column.FieldName;
-  DESC_IndexName := 'DESC_'+Column.FieldName;
+  ASC_IndexName := 'ASC_' + Column.FieldName;
+  DESC_IndexName := 'DESC_' + Column.FieldName;
   if SQLQuery.IndexDefs.IndexOf(ASC_IndexName) = -1 then
   begin
-    SQLQuery.AddIndex(ASC_IndexName, column.FieldName, []);
+    SQLQuery.AddIndex(ASC_IndexName, Column.FieldName, []);
     UpdateIndexes;
   end;
   if SQLQuery.IndexDefs.IndexOf(DESC_IndexName) = -1 then
   begin
-    SQLQuery.AddIndex(DESC_IndexName, column.FieldName, [ixDescending]);
+    SQLQuery.AddIndex(DESC_IndexName, Column.FieldName, [ixDescending]);
     UpdateIndexes;
   end;
   Column.Tag := not Column.Tag;
