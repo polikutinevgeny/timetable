@@ -154,11 +154,11 @@ begin
   SQLQuery.Close;
   FQuery.Free;
   FQuery := TQuery.Create(CurrentTable, FFilters);
-  SQLQuery.SQL.Text := FQuery.QueryAsText;
-  SQLQuery.Prepare;
-  for i := 0 to SQLQuery.Params.Count - 1 do
-    SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
   try
+    SQLQuery.SQL.Text := FQuery.QueryAsText;
+    SQLQuery.Prepare;
+    for i := 0 to SQLQuery.Params.Count - 1 do
+      SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
     SQLQuery.Open;
   except
     on E: Exception do

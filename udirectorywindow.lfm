@@ -18,20 +18,20 @@ object DirectoryForm: TDirectoryForm
     Width = 967
     Align = alClient
     ParentShowHint = False
-    Position = 500
+    Position = 570
     SplitterType = pstVertical
     object PairSplitterUpperSide: TPairSplitterSide
       Cursor = crArrow
       Left = 0
-      Height = 500
+      Height = 570
       Top = 0
       Width = 967
       ClientWidth = 967
-      ClientHeight = 500
+      ClientHeight = 570
       Constraints.MinHeight = 500
       object DBGrid: TDBGrid
         Left = 0
-        Height = 500
+        Height = 570
         Top = 0
         Width = 967
         Align = alClient
@@ -39,7 +39,9 @@ object DirectoryForm: TDirectoryForm
         Color = clWindow
         Columns = <>
         DataSource = DataSource
+        Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAnyButtonCanSelect, dgDisableDelete, dgDisableInsert, dgCellEllipsis, dgRowHighlight]
         ReadOnly = True
+        TabAdvance = aaDown
         TabOrder = 0
         TitleImageList = ImageList
         OnTitleClick = DBGridTitleClick
@@ -48,14 +50,14 @@ object DirectoryForm: TDirectoryForm
     object PairSplitterLowerSide: TPairSplitterSide
       Cursor = crArrow
       Left = 0
-      Height = 225
-      Top = 505
+      Height = 155
+      Top = 575
       Width = 967
       ClientWidth = 967
-      ClientHeight = 225
+      ClientHeight = 155
       object FilterSB: TScrollBox
         Left = 83
-        Height = 225
+        Height = 155
         Top = 0
         Width = 884
         HorzScrollBar.Page = 1
@@ -66,11 +68,11 @@ object DirectoryForm: TDirectoryForm
       object FilterControlPanel: TPanel
         AnchorSideRight.Control = FilterSB
         Left = 0
-        Height = 225
+        Height = 155
         Top = 0
         Width = 83
         Align = alLeft
-        ClientHeight = 225
+        ClientHeight = 155
         ClientWidth = 83
         TabOrder = 1
         object AddFilterBtn: TBitBtn
@@ -88,7 +90,7 @@ object DirectoryForm: TDirectoryForm
           Left = 8
           Height = 64
           Hint = 'Apply'
-          Top = 152
+          Top = 80
           Width = 64
           Enabled = False
           NumGlyphs = 2

@@ -24,7 +24,7 @@ type
       Relationship: TCol;
       Width: Integer;
       constructor Create(ASQLName, ADisplayName: String; ADataType: TDataType;
-        ARelationship: TCol; AWidth: Integer);
+        AWidth: Integer; AReference: TCol = nil);
   end;
 
   TColArray = array of TCol;
@@ -48,7 +48,7 @@ type
       Tables: array of TTable;
       procedure RegisterTable(
         ASQLName, ADisplayName: String; ACols: array of TCol);
-      function GetRelationship(ATableName, AColName: String): TCol;
+      function GetReference(ATableName, AColName: String): TCol;
   end;
 
 var
@@ -72,7 +72,7 @@ begin
   end;
 end;
 
-function TMetadata.GetRelationship(ATableName, AColName: String): TCol;
+function TMetadata.GetReference(ATableName, AColName: String): TCol;
 var
   t: TTable;
   c: TCol;
@@ -118,12 +118,12 @@ end;
 { TCol }
 
 constructor TCol.Create(ASQLName, ADisplayName: String; ADataType: TDataType;
-  ARelationship: TCol; AWidth: Integer);
+  AWidth: Integer; AReference: TCol = nil);
 begin
   SQLName := ASQLName;
   DisplayName := ADisplayName;
   DataType := ADataType;
-  Relationship := ARelationship;
+  Relationship := AReference;
   Width := AWidth;
 end;
 
@@ -131,44 +131,44 @@ initialization
   Metadata := TMetadata.Create;
   //Initializing metadata
   Metadata.RegisterTable('Groups', 'Groups', [
-    TCol.Create('id', 'Group ID', dtInteger, nil, 100),
-    TCol.Create('name', 'Group', dtString, nil, 120)]);
+    TCol.Create('id', 'Group ID', dtInteger, 100),
+    TCol.Create('name', 'Group', dtString, 120)]);
   Metadata.RegisterTable('Lessons', 'Lessons', [
-    TCol.Create('id', 'Lesson ID', dtInteger, nil, 100),
-    TCol.Create('name', 'Lesson', dtString, nil, 450)]);
+    TCol.Create('id', 'Lesson ID', dtInteger, 100),
+    TCol.Create('name', 'Lesson', dtString, 450)]);
   Metadata.RegisterTable('Teachers', 'Teachers', [
-    TCol.Create('id', 'Teacher ID', dtInteger, nil, 100),
-    TCol.Create('last_name', 'Last name', dtString, nil, 200),
-    TCol.Create('first_name', 'First name', dtString, nil, 200),
-    TCol.Create('middle_name', 'Middle name', dtString, nil, 200)]);
+    TCol.Create('id', 'Teacher ID', dtInteger, 100),
+    TCol.Create('last_name', 'Last name', dtString, 200),
+    TCol.Create('first_name', 'First name', dtString, 200),
+    TCol.Create('middle_name', 'Middle name', dtString, 200)]);
   Metadata.RegisterTable('Classrooms', 'Classrooms', [
-    TCol.Create('id', 'Classroom ID', dtInteger, nil, 120),
-    TCol.Create('name', 'Classroom', dtString, nil, 110)]);
+    TCol.Create('id', 'Classroom ID', dtInteger, 120),
+    TCol.Create('name', 'Classroom', dtString, 110)]);
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
-    TCol.Create('id', 'Lesson time ID', dtInteger, nil, 130),
-    TCol.Create('begin_', 'Starts at', dtString, nil, 100),
-    TCol.Create('end_', 'Ends at', dtString, nil, 100)]);
+    TCol.Create('id', 'Lesson time ID', dtInteger, 130),
+    TCol.Create('begin_', 'Starts at', dtString, 100),
+    TCol.Create('end_', 'Ends at', dtString, 100)]);
   Metadata.RegisterTable('Weekdays', 'Weekdays', [
-    TCol.Create('id', 'Weekday ID', dtInteger, nil, 100),
-    TCol.Create('name', 'Weekday', dtString, nil, 120)]);
+    TCol.Create('id', 'Weekday ID', dtInteger, 100),
+    TCol.Create('name', 'Weekday', dtString, 120)]);
   Metadata.RegisterTable('Lessons_Types', 'Lesson types', [
-    TCol.Create('id', 'Lesson type ID', dtInteger, nil, 130),
-    TCol.Create('name', 'Type', dtString, nil, 200)]);
+    TCol.Create('id', 'Lesson type ID', dtInteger, 130),
+    TCol.Create('name', 'Type', dtString, 200)]);
   Metadata.RegisterTable('Timetable', 'Timetable', [
-    TCol.Create('id', 'ID', dtInteger, nil, 40),
+    TCol.Create('id', 'ID', dtInteger, 40),
     TCol.Create('lesson_id', 'Lesson ID', dtInteger,
-      Metadata.GetRelationship('Lessons', 'id'), 100),
+      100, Metadata.GetReference('Lessons', 'id')),
     TCol.Create('lesson_type_id', 'Lesson type ID', dtInteger,
-      Metadata.GetRelationship('Lessons_Types', 'id'), 110),
+      110, Metadata.GetReference('Lessons_Types', 'id')),
     TCol.Create('teacher_id', 'Teacher ID', dtInteger,
-      Metadata.GetRelationship('Teachers', 'id'), 100),
+      100, Metadata.GetReference('Teachers', 'id')),
     TCol.Create('group_id', 'Group ID', dtInteger,
-      Metadata.GetRelationship('Groups', 'id'), 100),
+      100, Metadata.GetReference('Groups', 'id')),
     TCol.Create('classroom_id', 'Classroom ID', dtInteger,
-      Metadata.GetRelationship('Classrooms', 'id'), 120),
+      120, Metadata.GetReference('Classrooms', 'id')),
     TCol.Create('weekday_id', 'Weekday ID', dtInteger,
-      Metadata.GetRelationship('Weekdays', 'id'), 100),
+      100, Metadata.GetReference('Weekdays', 'id')),
     TCol.Create('lesson_time_id', 'Lesson time ID', dtInteger,
-      Metadata.GetRelationship('Lessons_Times', 'id'), 100)]);
+      100, Metadata.GetReference('Lessons_Times', 'id'))]);
 end.
 

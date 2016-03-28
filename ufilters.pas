@@ -56,14 +56,14 @@ type
 
   TFilterArray = array of TFilter;
 
+implementation
+
 const
   Actions: array[0..5] of String = ('=', '>', '<', '>=', '<=', 'LIKE');
   Interval: Integer = 40;
   UpperPadding: Integer = 20;
 
 var RemoveGlyph: TBitmap;
-
-implementation
 
 { TRemoveButton }
 
@@ -82,11 +82,15 @@ end;
 
 function TFilter.GetCol: TCol;
 begin
+  if FColumnCB.ItemIndex = -1 then
+    raise Exception.Create('Please, select column');
   Result := FCols[FColumnCB.ItemIndex];
 end;
 
 function TFilter.GetAction: String;
 begin
+  if FColumnCB.ItemIndex = -1 then
+    raise Exception.Create('Please, select action');
   Result := Actions[FActionCB.ItemIndex];
 end;
 
@@ -111,7 +115,7 @@ end;
 procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
 var i: Integer;
 begin
-  FColumnCB := TComboBox.Create(AScrollbox);
+  FColumnCB := TComboBox.Create(nil);
   for i := 0 to High(ACols) do
   begin
     FColumnCB.Items.Add(ACols[i].DisplayName);
@@ -119,7 +123,6 @@ begin
     FCols[i] := ACols[i];
   end;
   FColumnCB.Visible := False;
-  FColumnCB.ItemIndex := 0;
   FColumnCB.Width := 150;
   FColumnCB.ReadOnly := True;
   FColumnCB.OnChange := @FilterUpdate;
@@ -128,10 +131,9 @@ end;
 
 procedure TFilter.CreateActionCB(AScrollbox: TScrollBox);
 begin
-  FActionCB := TComboBox.Create(AScrollbox);
+  FActionCB := TComboBox.Create(nil);
   FActionCB.Visible := False;
   FActionCB.Items.AddStrings(Actions);
-  FActionCB.ItemIndex := 0;
   FActionCB.Width := 80;
   FActionCB.ReadOnly := True;
   FActionCB.OnChange := @FilterUpdate;
@@ -140,7 +142,7 @@ end;
 
 procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
 begin
-  FValueTE := TEdit.Create(AScrollbox);
+  FValueTE := TEdit.Create(nil);
   FValueTE.Visible := False;
   FValueTE.Text := '';
   FValueTE.Width := 300;
@@ -150,7 +152,7 @@ end;
 
 procedure TFilter.CreateRemoveBtn(AScrollbox: TScrollBox);
 begin
-  FRemoveBtn := TRemoveButton.Create(AScrollbox);
+  FRemoveBtn := TRemoveButton.Create(nil);
   FRemoveBtn.Visible := False;
   FRemoveBtn.Width := 34;
   FRemoveBtn.Height := 34;
