@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DBGrids, ExtCtrls, PairSplitter, UMetadata,
+  DBGrids, ExtCtrls, PairSplitter, UMetadata, math,
   UQuery, UFilters, Grids, Buttons;
 
 type
@@ -34,10 +34,12 @@ type
   private
     FFilters: array of TFilter;
     FQuery: TQuery;
-    FLastColumnSorted: TColumn;
+    FSortedColumn: TColumn;
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
     procedure SetColWidth;
+    procedure ExecuteQuery;
+    procedure UpdateSortOrder(ATitle: String; ATag: Integer);
   public
     CurrentTable: Integer;
   end;
@@ -94,6 +96,65 @@ begin
     DBGrid.Columns.Items[i].Width := FQuery.Cols[i].Width;
 end;
 
+procedure TDirectoryForm.ExecuteQuery;
+const SortDirection: array[0..1] of String = ('DESC', 'ASC');
+var
+  i, t: Integer;
+  s: String;
+  sorted: Boolean;
+begin
+  t := FSortedColumn.Tag;
+  sorted := FSortedColumn <> nil;
+  s := FSortedColumn.FieldName;
+  ExecuteBtn.Enabled := False;
+  SQLQuery.Close;
+  FQuery.Free;
+  FQuery := TQuery.Create(CurrentTable, FFilters);
+  SQLQuery.SQL.Text := FQuery.QueryAsText;
+  if sorted then
+    SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' ORDER BY "' +
+      s + '" ' + SortDirection[t] + ';';
+  try
+    SQLQuery.Prepare;
+    for i := 0 to SQLQuery.Params.Count - 1 do
+      SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
+    SQLQuery.Open;
+    if sorted then
+      UpdateSortOrder(s, t);
+    SetColWidth;
+  except
+    on E: Exception do
+    begin
+      MessageDlg('Error', 'An exception was raised:'#13#10 + E.Message + #13#10 +
+        'Probably an unacceptable value was entered or an impossible action was' +
+        ' selected.', mtError, [mbOK], 0);
+      SQLQuery.Close;
+      Exit;
+    end;
+  end;
+end;
+
+procedure TDirectoryForm.UpdateSortOrder(ATitle: String; ATag: Integer);
+const
+  ImgArrUp = 0;
+  ImgArrDown = 1;
+var i: Integer;
+begin
+  for i := 0 to DBGrid.Columns.Count - 1 do
+  begin
+    if DBGrid.Columns.Items[i].FieldName = ATitle then
+    begin
+      FSortedColumn := DBGrid.Columns.Items[i];
+      FSortedColumn.Tag := ATag;
+      if Boolean(FSortedColumn.Tag) then
+        FSortedColumn.Title.ImageIndex := ImgArrUp
+      else
+        FSortedColumn.Title.ImageIndex := ImgArrDown;
+      Break;
+    end;
+  end;
+end;
+
 procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);
 begin
   ExecuteBtn.Enabled := True;
@@ -105,74 +166,18 @@ begin
 end;
 
 procedure TDirectoryForm.DBGridTitleClick(Column: TColumn);
-const
-  ImgArrUp = 0;
-  ImgArrDown = 1;
-var
-  ASC_IndexName, DESC_IndexName: String;
-
-  procedure UpdateIndexes;
-  begin
-    SQLQuery.IndexDefs.Updated := false;
-    SQLQuery.IndexDefs.Update;
-  end;
-
 begin
-  ASC_IndexName := 'ASC_' + Column.FieldName;
-  DESC_IndexName := 'DESC_' + Column.FieldName;
-  if SQLQuery.IndexDefs.IndexOf(ASC_IndexName) = -1 then
-  begin
-    SQLQuery.AddIndex(ASC_IndexName, Column.FieldName, []);
-    UpdateIndexes;
-  end;
-  if SQLQuery.IndexDefs.IndexOf(DESC_IndexName) = -1 then
-  begin
-    SQLQuery.AddIndex(DESC_IndexName, Column.FieldName, [ixDescending]);
-    UpdateIndexes;
-  end;
-  Column.Tag := not Column.Tag;
-  if Boolean(Column.Tag) then
-  begin
-    Column.Title.ImageIndex := ImgArrUp;
-    SQLQuery.IndexName := ASC_IndexName;
-  end
-  else
-  begin
-    Column.Title.ImageIndex := ImgArrDown;
-    SQLQuery.IndexName := DESC_IndexName;
-  end;
-  if (FLastColumnSorted <> nil) and (FLastColumnSorted <> Column) then
-    FLastColumnSorted.Title.ImageIndex := -1;
-  FLastColumnSorted := Column;
-  SetColWidth;
+  Column.Tag := ifthen(Column.Tag = 0, 1, 0);
+  if (FSortedColumn <> nil) and (FSortedColumn <> Column) then
+    FSortedColumn.Title.ImageIndex := -1;
+  FSortedColumn := Column;
+  FSortedColumn.FieldName := Column.FieldName;
+  ExecuteQuery;
 end;
 
 procedure TDirectoryForm.ExecuteBtnClick(Sender: TObject);
-var i: Integer;
 begin
-  ExecuteBtn.Enabled := False;
-  SQLQuery.Close;
-  FQuery.Free;
-  FQuery := TQuery.Create(CurrentTable, FFilters);
-  try
-    SQLQuery.SQL.Text := FQuery.QueryAsText;
-    SQLQuery.Prepare;
-    for i := 0 to SQLQuery.Params.Count - 1 do
-      SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
-    SQLQuery.Open;
-  except
-    on E: Exception do
-    begin
-      MessageDlg('Error', 'An exception was raised:'#13#10 + E.Message + #13#10 +
-        'Probably an unacceptable value was entered or an impossible action was' +
-        ' selected.', mtError, [mbOK], 0);
-      SQLQuery.Close;
-      Exit;
-    end;
-  end;
-  SetColWidth;
-  if FLastColumnSorted <> nil then
-    FLastColumnSorted.Title.ImageIndex := FLastColumnSorted.Tag;
+  ExecuteQuery;
 end;
 
 procedure TDirectoryForm.FormClose(Sender: TObject;
