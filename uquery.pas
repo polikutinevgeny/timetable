@@ -57,13 +57,13 @@ begin
   Result := Format('FROM %s ', [FTables[0].SQLName]);
   for i := 0 to High(FTables[0].ForeignKeys) do
     Result += Format('INNER JOIN %s ON %s.%s = %s.%s ', [
-      FTables[0].ForeignKeys[i].Relationship.Table.SQLName,
+      FTables[0].ForeignKeys[i].Reference.Table.SQLName,
       FTables[0].SQLName, FTables[0].ForeignKeys[i].SQLName,
-      FTables[0].ForeignKeys[i].Relationship.Table.SQLName,
-      FTables[0].ForeignKeys[i].Relationship.SQLName]);
+      FTables[0].ForeignKeys[i].Reference.Table.SQLName,
+      FTables[0].ForeignKeys[i].Reference.SQLName]);
 end;
 
-function TQuery.GetFiltersAsText: String; //returns parametrized query
+function TQuery.GetFiltersAsText: String;
 var i: Integer;
 begin
   if Length(FFilters) = 0 then
@@ -106,9 +106,9 @@ var
   i: Integer;
 begin
   SetLength(FTables, Length(Metadata.Tables[ATableNumber].ForeignKeys) + 1);
-    FTables[0] := Metadata.Tables[ATableNumber];
-    for i := 1 to High(FTables) do
-      FTables[i] := FTables[0].ForeignKeys[i - 1].Relationship.Table;
+  FTables[0] := Metadata.Tables[ATableNumber];
+  for i := 1 to High(FTables) do
+    FTables[i] := FTables[0].ForeignKeys[i - 1].Reference.Table;
 end;
 
 constructor TQuery.Create(ATableNumber: Integer; AFilterList: TFilterArray);
