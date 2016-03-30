@@ -37,7 +37,6 @@ type
   public
     Table: TTable;
     ID: Integer;
-    Mode: TMode;
     procedure Setup(ATable: TTable; AID: Integer);
   end;
 
