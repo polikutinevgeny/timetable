@@ -43,6 +43,8 @@ type
       procedure AddCol(ACol: TCol);
   end;
 
+  TTableArray = array of TTable;
+
   { TMetadata }
 
   TMetadata = class

@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -86,6 +86,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="UQuery"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="ucardwindow.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="CardWindow"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UCardWindow"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -107,7 +115,7 @@
     </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="5">
+    <Exceptions Count="6">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -122,7 +130,11 @@
       </Item4>
       <Item5>
         <Name Value="Exception"/>
+        <Enabled Value="False"/>
       </Item5>
+      <Item6>
+        <Name Value="TColumnException"/>
+      </Item6>
     </Exceptions>
   </Debugging>
 </CONFIG>

@@ -56,6 +56,9 @@ type
 
   TFilterArray = array of TFilter;
 
+  TColumnException = class(Exception);
+  TActionException = class(Exception);
+
 implementation
 
 const
@@ -83,14 +86,14 @@ end;
 function TFilter.GetCol: TCol;
 begin
   if FColumnCB.ItemIndex = -1 then
-    raise Exception.Create('Please, select column');
+    raise TColumnException.Create('Please, select column');
   Result := FCols[FColumnCB.ItemIndex];
 end;
 
 function TFilter.GetAction: String;
 begin
   if FColumnCB.ItemIndex = -1 then
-    raise Exception.Create('Please, select action');
+    raise TActionException.Create('Please, select action');
   Result := Actions[FActionCB.ItemIndex];
 end;
 
@@ -202,5 +205,7 @@ end;
 initialization
   RemoveGlyph := TBitmap.Create;
   RemoveGlyph.LoadFromFile('icons/Remove.bmp');
+  RemoveGlyph.TransparentColor := clWhite;
+  RemoveGlyph.Transparent := True;
 end.
 

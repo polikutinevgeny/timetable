@@ -13,20 +13,22 @@ type
 
   TQuery = class
     private
-      FTables: array of TTable;
+      FTables: TTableArray;
       FCols: TColArray;
       FFilters: TFilterArray;
+      function GetBaseTable: TTable;
       function GetQueryAsText: String;
       function GetSelectAsText: String;
       function GetFromAsText: String;
       function GetFiltersAsText: String;
       procedure SetFilters(AFilters: TFilterArray);
       procedure SetCols;
-      procedure SetTables(ATableNumber: Integer);
+      procedure SetTables(ATable: TTable);
     public
-      constructor Create(ATableNumber: Integer; AFilterList: TFilterArray);
+      constructor Create(ATable: TTable; AFilterList: TFilterArray);
       property QueryAsText: String read GetQueryAsText; //returns parametrized query, without parameters
       property Cols: TColArray read FCols;
+      property BaseTable: TTable read GetBaseTable;
   end;
 
 implementation
@@ -36,7 +38,9 @@ implementation
 function TQuery.GetSelectAsText: String;
 var i, j: Integer;
 begin
-  Result := 'SELECT ';
+  Result := Format('SELECT %s.%s AS "%s",', [
+    FTables[0].SQLName, FTables[0].PrimaryKey.SQLName,
+    FTables[0].PrimaryKey.DisplayName]);
   for i := 0 to High(FTables) do
     for j := 0 to High(FTables[i].Cols) do
       Result += Format('%s.%s AS "%s",', [
@@ -49,6 +53,11 @@ function TQuery.GetQueryAsText: String;
 begin
   Result := Format('%s %s %s', [
     GetSelectAsText, GetFromAsText, GetFiltersAsText]);
+end;
+
+function TQuery.GetBaseTable: TTable;
+begin
+  Result := FTables[0];
 end;
 
 function TQuery.GetFromAsText: String;
@@ -101,19 +110,19 @@ begin
     end;
 end;
 
-procedure TQuery.SetTables(ATableNumber: Integer);
+procedure TQuery.SetTables(ATable: TTable);
 var
   i: Integer;
 begin
-  SetLength(FTables, Length(Metadata.Tables[ATableNumber].ForeignKeys) + 1);
-  FTables[0] := Metadata.Tables[ATableNumber];
+  SetLength(FTables, Length(ATable.ForeignKeys) + 1);
+  FTables[0] := ATable;
   for i := 1 to High(FTables) do
     FTables[i] := FTables[0].ForeignKeys[i - 1].Reference.Table;
 end;
 
-constructor TQuery.Create(ATableNumber: Integer; AFilterList: TFilterArray);
+constructor TQuery.Create(ATable: TTable; AFilterList: TFilterArray);
 begin
-  SetTables(ATableNumber);
+  SetTables(ATable);
   SetFilters(AFilterList);
   SetCols;
 end;

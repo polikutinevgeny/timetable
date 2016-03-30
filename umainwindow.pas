@@ -53,7 +53,7 @@ procedure TMainWindow.DirectoryMIClick(Sender: TObject);
 var f: TDirectoryForm;
 begin
   f := TDirectoryForm.Create(Application); //if you write nil here, program will crash
-  f.CurrentTable := (Sender as TMenuItem).Tag;
+  f.CurrentTable := Metadata.Tables[(Sender as TMenuItem).Tag];
   f.Show;
 end;
 

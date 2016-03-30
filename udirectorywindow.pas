@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DBGrids, ExtCtrls, PairSplitter, UMetadata, math,
-  UQuery, UFilters, Grids, Buttons;
+  DBGrids, ExtCtrls, PairSplitter, UMetadata, math, UCardWindow,
+  UQuery, UFilters, Grids, Buttons, DbCtrls, ComCtrls;
 
 type
 
@@ -16,7 +16,8 @@ type
   TDirectoryForm = class(TForm)
     AddFilterBtn: TBitBtn;
     ExecuteBtn: TBitBtn;
-    ImageList: TImageList;
+    ArrowIL: TImageList;
+    ToolBarIL: TImageList;
     PairSplitter: TPairSplitter;
     PairSplitterUpperSide: TPairSplitterSide;
     PairSplitterLowerSide: TPairSplitterSide;
@@ -24,13 +25,21 @@ type
     DBGrid: TDBGrid;
     FilterSB: TScrollBox;
     FilterControlPanel: TPanel;
+    NavigatorPanel: TPanel;
     SQLQuery: TSQLQuery;
+    NavigatorTB: TToolBar;
+    AddBtn: TToolButton;
+    EditBtn: TToolButton;
+    RemoveBtn: TToolButton;
+    procedure AddBtnClick(Sender: TObject);
     procedure AddFilterBtnClick(Sender: TObject);
     procedure DBGridTitleClick(Column: TColumn);
+    procedure EditBtnClick(Sender: TObject);
     procedure ExecuteBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure RemoveBtnClick(Sender: TObject);
   private
     FFilters: array of TFilter;
     FQuery: TQuery;
@@ -41,7 +50,7 @@ type
     procedure ExecuteQuery;
     procedure UpdateSortOrder(ATitle: String; ATag: Integer);
   public
-    CurrentTable: Integer;
+    CurrentTable: TTable;
   end;
 
 implementation
@@ -55,7 +64,7 @@ var
 
 procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
-  Caption := Metadata.Tables[CurrentTable].DisplayName;
+  Caption := CurrentTable.DisplayName;
   AddFilterBtn.Glyph := AddGlyph;
   ExecuteBtn.Glyph := ApplyGlyph;
   SQLQuery.Close;
@@ -63,6 +72,11 @@ begin
   SQLQuery.SQL.Text := FQuery.QueryAsText;
   SQLQuery.Open;
   SetColWidth;
+end;
+
+procedure TDirectoryForm.RemoveBtnClick(Sender: TObject);
+begin
+
 end;
 
 procedure TDirectoryForm.UpdateStatus;
@@ -92,8 +106,9 @@ end;
 procedure TDirectoryForm.SetColWidth;
 var i: Integer;
 begin
-  for i := 0 to High(FQuery.Cols) do
-    DBGrid.Columns.Items[i].Width := FQuery.Cols[i].Width;
+  DBGrid.Columns.Items[0].Width := FQuery.BaseTable.PrimaryKey.Width;
+  for i := 1 to High(FQuery.Cols) do
+    DBGrid.Columns.Items[i].Width := FQuery.Cols[i - 1].Width;
 end;
 
 procedure TDirectoryForm.ExecuteQuery;
@@ -103,18 +118,21 @@ var
   s: String;
   sorted: Boolean;
 begin
-  t := FSortedColumn.Tag;
   sorted := FSortedColumn <> nil;
-  s := FSortedColumn.FieldName;
+  if sorted then
+  begin
+    t := FSortedColumn.Tag;
+    s := FSortedColumn.FieldName;
+  end;
   ExecuteBtn.Enabled := False;
   SQLQuery.Close;
   FQuery.Free;
   FQuery := TQuery.Create(CurrentTable, FFilters);
-  SQLQuery.SQL.Text := FQuery.QueryAsText;
-  if sorted then
-    SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' ORDER BY "' +
-      s + '" ' + SortDirection[t] + ';';
   try
+    SQLQuery.SQL.Text := FQuery.QueryAsText;
+    if sorted then
+      SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' ORDER BY "' +
+        s + '" ' + SortDirection[t] + ';';
     SQLQuery.Prepare;
     for i := 0 to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
@@ -160,9 +178,20 @@ begin
   ExecuteBtn.Enabled := True;
   SetLength(FFilters, Length(FFilters) + 1);
   FFilters[High(FFilters)] := TFilter.Create(
-    FilterSB, Metadata.Tables[CurrentTable], FQuery.Cols);
+    FilterSB, CurrentTable, FQuery.Cols);
   FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
   FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
+end;
+
+procedure TDirectoryForm.AddBtnClick(Sender: TObject);
+var
+  t: TCardWindow;
+begin
+  t := TCardWindow.Create(Application);
+  t.Setup(CurrentTable, -1);
+  t.Caption := 'Add - ' + CurrentTable.DisplayName;
+  RegisterCard(t);
+  t.Show;
 end;
 
 procedure TDirectoryForm.DBGridTitleClick(Column: TColumn);
@@ -173,6 +202,25 @@ begin
   FSortedColumn := Column;
   FSortedColumn.FieldName := Column.FieldName;
   ExecuteQuery;
+end;
+
+procedure TDirectoryForm.EditBtnClick(Sender: TObject);
+var
+  t: TCardWindow;
+  id: Integer;
+begin
+  id := DBGrid.DataSource.DataSet.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
+  t := CheckCardExistence(CurrentTable, id);
+  if t <> nil then
+  begin
+    t.BringToFront;
+    Exit;
+  end;
+  t := TCardWindow.Create(Application);
+  t.Setup(CurrentTable, id);
+  t.Caption := 'Edit - ' + CurrentTable.DisplayName;
+  RegisterCard(t);
+  t.Show;
 end;
 
 procedure TDirectoryForm.ExecuteBtnClick(Sender: TObject);
@@ -197,7 +245,11 @@ end;
 initialization
   AddGlyph := TBitmap.Create;
   AddGlyph.LoadFromFile('icons/Add.bmp');
+  AddGlyph.TransparentColor := clWhite;
+  AddGlyph.Transparent := True;
   ApplyGlyph := TBitmap.Create;
   ApplyGlyph.LoadFromFile('icons/Apply.bmp');
+  ApplyGlyph.TransparentColor := clWhite;
+  ApplyGlyph.Transparent := True;
 end.
 
