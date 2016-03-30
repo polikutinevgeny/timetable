@@ -3,7 +3,7 @@ object CardWindow: TCardWindow
   Height = 597
   Top = 143
   Width = 700
-  Caption = 'CardWindow'
+  Caption = 'Object card'
   ClientHeight = 597
   ClientWidth = 700
   OnClose = FormClose
@@ -28,14 +28,14 @@ object CardWindow: TCardWindow
       OnClick = OKBtnClick
     end
     object SaveBtn: TToolButton
-      Left = 65
+      Left = 69
       Top = 2
       Caption = 'SaveBtn'
       ImageIndex = 2
       OnClick = SaveBtnClick
     end
     object CancelBtn: TToolButton
-      Left = 129
+      Left = 137
       Top = 2
       Caption = 'CancelBtn'
       ImageIndex = 1
@@ -55,9 +55,10 @@ object CardWindow: TCardWindow
   object SQLQuery: TSQLQuery
     FieldDefs = <>
     Database = DB.IBConnection
-    Transaction = SQLTransaction
+    Transaction = DB.SQLTransaction
     Options = []
     Params = <>
+    UpdateMode = upWhereAll
     left = 40
     top = 8
   end
@@ -67,7 +68,7 @@ object CardWindow: TCardWindow
     top = 8
   end
   object SQLTransaction: TSQLTransaction
-    Active = True
+    Active = False
     Database = DB.IBConnection
     Options = []
     left = 120

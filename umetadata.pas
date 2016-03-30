@@ -157,19 +157,19 @@ initialization
     TCol.Create('name', 'Type', dtString, 200)]);
   Metadata.RegisterTable('Timetable', 'Timetable', [
     TCol.Create('id', 'ID', dtInteger, 40, True),
-    TCol.Create('lesson_id', 'Lesson ID', dtInteger,
+    TCol.Create('lesson_id', 'Lesson', dtInteger,
       100, False, Metadata.GetReference('Lessons')),
-    TCol.Create('lesson_type_id', 'Lesson type ID', dtInteger,
+    TCol.Create('lesson_type_id', 'Lesson type', dtInteger,
       110, False, Metadata.GetReference('Lessons_Types')),
-    TCol.Create('teacher_id', 'Teacher ID', dtInteger,
+    TCol.Create('teacher_id', 'Teacher', dtInteger,
       100, False, Metadata.GetReference('Teachers')),
-    TCol.Create('group_id', 'Group ID', dtInteger,
+    TCol.Create('group_id', 'Group', dtInteger,
       100, False, Metadata.GetReference('Groups')),
-    TCol.Create('classroom_id', 'Classroom ID', dtInteger,
+    TCol.Create('classroom_id', 'Classroom', dtInteger,
       120, False, Metadata.GetReference('Classrooms')),
-    TCol.Create('weekday_id', 'Weekday ID', dtInteger,
+    TCol.Create('weekday_id', 'Weekday', dtInteger,
       100, False, Metadata.GetReference('Weekdays')),
-    TCol.Create('lesson_time_id', 'Lesson time ID', dtInteger,
+    TCol.Create('lesson_time_id', 'Lesson time', dtInteger,
       100, False, Metadata.GetReference('Lessons_Times'))]);
 end.
 

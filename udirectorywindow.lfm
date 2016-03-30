@@ -44,6 +44,7 @@ object DirectoryForm: TDirectoryForm
         TabAdvance = aaDown
         TabOrder = 0
         TitleImageList = ArrowIL
+        OnDblClick = DBGridDblClick
         OnTitleClick = DBGridTitleClick
       end
       object NavigatorPanel: TPanel
@@ -154,7 +155,7 @@ object DirectoryForm: TDirectoryForm
     FieldDefs = <>
     Database = DB.IBConnection
     Transaction = DB.SQLTransaction
-    Options = []
+    Options = [sqoAutoApplyUpdates]
     Params = <>
     left = 832
     top = 8

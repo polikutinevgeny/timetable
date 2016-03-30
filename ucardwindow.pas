@@ -94,7 +94,6 @@ begin
   SQLQuery.InsertSQL.Text := MakeInsertQuery;
   SQLQuery.Prepare;
   SQLQuery.Open;
-  SQLQuery.UpdateMode := upWhereAll;
   for i := 0 to High(Table.Cols) do
     AddEdit(Table.Cols[i]);
   for i := 0 to High(Table.ForeignKeys) do

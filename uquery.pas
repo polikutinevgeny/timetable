@@ -17,7 +17,6 @@ type
       FCols: TColArray;
       FFilters: TFilterArray;
       function GetBaseTable: TTable;
-      function GetQueryAsText: String;
       function GetSelectAsText: String;
       function GetFromAsText: String;
       function GetFiltersAsText: String;
@@ -26,7 +25,8 @@ type
       procedure SetTables(ATable: TTable);
     public
       constructor Create(ATable: TTable; AFilterList: TFilterArray);
-      property QueryAsText: String read GetQueryAsText; //returns parametrized query, without parameters
+      function QueryAsText: String;//returns parametrized query, without parameters
+      function DeleteQueryAsText: String;
       property Cols: TColArray read FCols;
       property BaseTable: TTable read GetBaseTable;
   end;
@@ -49,7 +49,7 @@ begin
   Result[High(Result)] := ' ';
 end;
 
-function TQuery.GetQueryAsText: String;
+function TQuery.QueryAsText: String;
 begin
   Result := Format('%s %s %s', [
     GetSelectAsText, GetFromAsText, GetFiltersAsText]);
@@ -125,6 +125,12 @@ begin
   SetTables(ATable);
   SetFilters(AFilterList);
   SetCols;
+end;
+
+function TQuery.DeleteQueryAsText: String;
+begin
+  Result := 'DELETE FROM ' + FTables[0].SQLName + ' WHERE ' +
+    FTables[0].PrimaryKey.SQLName + ' = :' + FTables[0].PrimaryKey.SQLName;
 end;
 
 end.

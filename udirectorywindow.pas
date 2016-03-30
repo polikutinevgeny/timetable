@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DBGrids, ExtCtrls, PairSplitter, UMetadata, math, UCardWindow,
+  DBGrids, ExtCtrls, PairSplitter, UMetadata, math, UCardWindow, UDB,
   UQuery, UFilters, Grids, Buttons, DbCtrls, ComCtrls;
 
 type
@@ -33,6 +33,7 @@ type
     RemoveBtn: TToolButton;
     procedure AddBtnClick(Sender: TObject);
     procedure AddFilterBtnClick(Sender: TObject);
+    procedure DBGridDblClick(Sender: TObject);
     procedure DBGridTitleClick(Column: TColumn);
     procedure EditBtnClick(Sender: TObject);
     procedure ExecuteBtnClick(Sender: TObject);
@@ -67,16 +68,22 @@ begin
   Caption := CurrentTable.DisplayName;
   AddFilterBtn.Glyph := AddGlyph;
   ExecuteBtn.Glyph := ApplyGlyph;
-  SQLQuery.Close;
   FQuery := TQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := FQuery.QueryAsText;
+  SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
+  SQLQuery.Prepare;
   SQLQuery.Open;
   SetColWidth;
 end;
 
 procedure TDirectoryForm.RemoveBtnClick(Sender: TObject);
 begin
-
+  if MessageDlg('Delete?', 'Do you really want to delete this record?',
+    mtConfirmation, mbYesNo, 0) = mrYes then
+  begin
+    SQLQuery.Delete;
+    UDB.DB.SQLTransaction.CommitRetaining;
+  end;
 end;
 
 procedure TDirectoryForm.UpdateStatus;
@@ -183,13 +190,30 @@ begin
   FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
 end;
 
+procedure TDirectoryForm.DBGridDblClick(Sender: TObject); //duplicate
+var
+  t: TCardWindow;
+  id: Integer;
+begin
+  id := DBGrid.DataSource.DataSet.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
+  t := CheckCardExistence(CurrentTable, id);
+  if t <> nil then
+  begin
+    t.BringToFront;
+    Exit;
+  end;
+  t := TCardWindow.Create(Application);
+  t.Setup(CurrentTable, id);
+  RegisterCard(t);
+  t.Show;
+end;
+
 procedure TDirectoryForm.AddBtnClick(Sender: TObject);
 var
   t: TCardWindow;
 begin
   t := TCardWindow.Create(Application);
   t.Setup(CurrentTable, -1);
-  t.Caption := 'Add - ' + CurrentTable.DisplayName;
   RegisterCard(t);
   t.Show;
 end;
@@ -218,7 +242,6 @@ begin
   end;
   t := TCardWindow.Create(Application);
   t.Setup(CurrentTable, id);
-  t.Caption := 'Edit - ' + CurrentTable.DisplayName;
   RegisterCard(t);
   t.Show;
 end;
