@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DbCtrls, ExtCtrls, ComCtrls, UMetadata, UQuery, UDB, StdCtrls;
+  DbCtrls, ExtCtrls, ComCtrls, UMetadata, UQuery, UDB, StdCtrls, UNotification;
 
 type
 
@@ -107,16 +107,35 @@ begin
   SQLQuery.ApplyUpdates;
   SQLTransaction.Commit;
   UDB.DB.SQLTransaction.CommitRetaining;
+  OnDataUpdate;
   Close;
 end;
 
 procedure TCardWindow.SaveBtnClick(Sender: TObject);
+var tq: TSQLQuery;
 begin
   SQLQuery.Edit;
   SQLQuery.Post;
   SQLQuery.ApplyUpdates;
   SQLTransaction.CommitRetaining;
   UDB.DB.SQLTransaction.CommitRetaining;
+  OnDataUpdate;
+  if ID = -1 then
+  begin
+    tq := TSQLQuery.Create(Self);
+    tq.SQLTransaction := SQLTransaction;
+    tq.DataBase := UDB.DB.IBConnection;
+    tq.SQL.Text := 'SELECT gen_id(' + Table.GeneratorName + ', 0) AS ID FROM rdb$database';
+    tq.Open;
+    ID := tq.FieldByName('ID').AsInteger;
+    tq.Free;
+    SQLQuery.Close;
+    SQLQuery.SQL.Text := MakeQuery;
+    SQLQuery.UpdateSQL.Text := MakeUpdateQuery;
+    SQLQuery.InsertSQL.Text := MakeInsertQuery;
+    SQLQuery.Prepare;
+    SQLQuery.Open;
+  end;
 end;
 
 function TCardWindow.MakeQuery: String;
@@ -214,7 +233,7 @@ var
   tsq: TSQLQuery;
   tl: TLabel;
 begin
-  tsq := TSQLQuery.Create(ScrollBox);
+  tsq := TSQLQuery.Create(ScrollBox); //CreateQuery?
   tsq.DataBase := UDB.DB.IBConnection;
   tsq.Transaction := SQLTransaction;
   tds := TDataSource.Create(ScrollBox);
@@ -244,15 +263,13 @@ procedure TCardWindow.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   CloseAction := caFree;
   RemoveCard(Self);
-  if SQLTransaction.Active then
-    SQLTransaction.Rollback;
+  SQLTransaction.Rollback;
 end;
 
 procedure TCardWindow.CancelBtnClick(Sender: TObject);
 begin
   SQLTransaction.Rollback;
   Close;
-  //UDB.DB.SQLTransaction.CommitRetaining;
 end;
 
 procedure TCardWindow.Setup(ATable: TTable; AID: Integer);

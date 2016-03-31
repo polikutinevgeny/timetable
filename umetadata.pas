@@ -39,6 +39,7 @@ type
       PrimaryKey: TCol;
       SQLName: String;
       DisplayName: String;
+      GeneratorName: String;
       constructor Create(ASQLName, ADisplayName: String);
       procedure AddCol(ACol: TCol);
   end;
@@ -51,7 +52,8 @@ type
     public
       Tables: array of TTable;
       procedure RegisterTable(
-        ASQLName, ADisplayName: String; ACols: array of TCol);
+        ASQLName, ADisplayName: String; ACols: array of TCol;
+        AGenerator: String);
       function GetReference(ATableName: String): TCol;
   end;
 
@@ -63,7 +65,7 @@ implementation
 { TMetadata }
 
 procedure TMetadata.RegisterTable(ASQLName, ADisplayName: String;
-  ACols: array of TCol);
+  ACols: array of TCol; AGenerator: String);
 var
   i: Integer;
 begin
@@ -74,6 +76,7 @@ begin
     Tables[High(Tables)].AddCol(ACols[i]);
     ACols[i].Table := Tables[High(Tables)];
   end;
+  Tables[High(Tables)].GeneratorName := AGenerator;
 end;
 
 function TMetadata.GetReference(ATableName: String): TCol;
@@ -133,28 +136,35 @@ initialization
   //Initializing metadata
   Metadata.RegisterTable('Groups', 'Groups', [
     TCol.Create('id', 'Group ID', dtInteger, 100, True),
-    TCol.Create('name', 'Group', dtString, 120)]);
+    TCol.Create('name', 'Group', dtString, 120)],
+    'GroupsIdGenerator');
   Metadata.RegisterTable('Lessons', 'Lessons', [
     TCol.Create('id', 'Lesson ID', dtInteger, 100, True),
-    TCol.Create('name', 'Lesson', dtString, 450)]);
+    TCol.Create('name', 'Lesson', dtString, 450)],
+    'LessonsIdGenerator');
   Metadata.RegisterTable('Teachers', 'Teachers', [
     TCol.Create('id', 'Teacher ID', dtInteger, 100, True),
     TCol.Create('last_name', 'Last name', dtString, 200),
     TCol.Create('first_name', 'First name', dtString, 200),
-    TCol.Create('middle_name', 'Middle name', dtString, 200)]);
+    TCol.Create('middle_name', 'Middle name', dtString, 200)],
+    'TeachersIdGenerator');
   Metadata.RegisterTable('Classrooms', 'Classrooms', [
     TCol.Create('id', 'Classroom ID', dtInteger, 120, True),
-    TCol.Create('name', 'Classroom', dtString, 110)]);
+    TCol.Create('name', 'Classroom', dtString, 110)],
+    'ClassroomsIdGenerator');
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
     TCol.Create('id', 'Lesson time ID', dtInteger, 130, True),
     TCol.Create('begin_', 'Starts at', dtString, 100),
-    TCol.Create('end_', 'Ends at', dtString, 100)]);
+    TCol.Create('end_', 'Ends at', dtString, 100)],
+    'LessonsTimesIdGenerator');
   Metadata.RegisterTable('Weekdays', 'Weekdays', [
     TCol.Create('id', 'Weekday ID', dtInteger, 100, True),
-    TCol.Create('name', 'Weekday', dtString, 120)]);
+    TCol.Create('name', 'Weekday', dtString, 120)],
+    'WeekdaysIdGenerator');
   Metadata.RegisterTable('Lessons_Types', 'Lesson types', [
     TCol.Create('id', 'Lesson type ID', dtInteger, 130, True),
-    TCol.Create('name', 'Type', dtString, 200)]);
+    TCol.Create('name', 'Type', dtString, 200)],
+    'LessonsTypesIdGenerator');
   Metadata.RegisterTable('Timetable', 'Timetable', [
     TCol.Create('id', 'ID', dtInteger, 40, True),
     TCol.Create('lesson_id', 'Lesson', dtInteger,
@@ -170,6 +180,7 @@ initialization
     TCol.Create('weekday_id', 'Weekday', dtInteger,
       100, False, Metadata.GetReference('Weekdays')),
     TCol.Create('lesson_time_id', 'Lesson time', dtInteger,
-      100, False, Metadata.GetReference('Lessons_Times'))]);
+      100, False, Metadata.GetReference('Lessons_Times'))],
+    'TimetableIdGenerator');
 end.
 

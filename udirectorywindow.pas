@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
   DBGrids, ExtCtrls, PairSplitter, UMetadata, math, UCardWindow, UDB,
-  UQuery, UFilters, Grids, Buttons, DbCtrls, ComCtrls;
+  UQuery, UFilters, Grids, Buttons, DbCtrls, ComCtrls, UNotification;
 
 type
 
@@ -46,6 +46,7 @@ type
     FQuery: TQuery;
     FSortedColumn: TColumn;
     procedure UpdateStatus;
+    procedure UpdateData;
     procedure RemoveFilter(Sender: TObject);
     procedure SetColWidth;
     procedure ExecuteQuery;
@@ -65,6 +66,7 @@ var
 
 procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
+  RegisterListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
   AddFilterBtn.Glyph := AddGlyph;
   ExecuteBtn.Glyph := ApplyGlyph;
@@ -83,12 +85,26 @@ begin
   begin
     SQLQuery.Delete;
     UDB.DB.SQLTransaction.CommitRetaining;
+    OnDataUpdate;
   end;
 end;
 
 procedure TDirectoryForm.UpdateStatus;
 begin
   ExecuteBtn.Enabled := True;
+end;
+
+procedure TDirectoryForm.UpdateData;
+var id: Integer;
+begin
+  id := SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
+  SQLQuery.Close;
+  SQLQuery.Open;
+  SetColWidth;
+  SQLQuery.First;
+  while (SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName] <> id) and
+    not SQLQuery.EOF do
+    SQLQuery.Next;
 end;
 
 procedure TDirectoryForm.RemoveFilter(Sender: TObject);
@@ -255,6 +271,7 @@ procedure TDirectoryForm.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
   CloseAction := caFree;
+  RemoveListener(@UpdateData);
 end;
 
 procedure TDirectoryForm.FormDestroy(Sender: TObject);
