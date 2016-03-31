@@ -10,29 +10,29 @@ uses
 type
   TDataUpdateEvent = procedure of object;
 
-procedure RegisterListener(AListener: TDataUpdateEvent);
-procedure RemoveListener(AListener: TDataUpdateEvent);
+procedure RegisterDataUpdateListener(AListener: TDataUpdateEvent);
+procedure RemoveDataUpdateListener(AListener: TDataUpdateEvent);
 procedure OnDataUpdate;
 
 implementation
 
-var Listeners: array of TDataUpdateEvent;
+var DataUpdateListeners: array of TDataUpdateEvent;
 
-procedure RegisterListener(AListener: TDataUpdateEvent);
+procedure RegisterDataUpdateListener(AListener: TDataUpdateEvent);
 begin
-  SetLength(Listeners, Length(Listeners) + 1);
-  Listeners[High(Listeners)] := AListener;
+  SetLength(DataUpdateListeners, Length(DataUpdateListeners) + 1);
+  DataUpdateListeners[High(DataUpdateListeners)] := AListener;
 end;
 
-procedure RemoveListener(AListener: TDataUpdateEvent);
+procedure RemoveDataUpdateListener(AListener: TDataUpdateEvent);
 var i, j: Integer;
 begin
-  for i := 0 to High(Listeners) do
-    if Listeners[i] = AListener then
+  for i := 0 to High(DataUpdateListeners) do
+    if DataUpdateListeners[i] = AListener then
     begin
-      for j := i to High(Listeners) - 1 do
-        Listeners[i] := Listeners[i + 1];
-      SetLength(Listeners, Length(Listeners) - 1);
+      for j := i to High(DataUpdateListeners) - 1 do
+        DataUpdateListeners[i] := DataUpdateListeners[i + 1];
+      SetLength(DataUpdateListeners, Length(DataUpdateListeners) - 1);
       Exit;
     end;
   raise Exception.Create('Attempt to remove a not existing listener');
@@ -41,8 +41,8 @@ end;
 procedure OnDataUpdate;
 var i: Integer;
 begin
-  for i := 0 to High(Listeners) do
-    Listeners[i];
+  for i := 0 to High(DataUpdateListeners) do
+    DataUpdateListeners[i];
 end;
 
 end.

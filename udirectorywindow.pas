@@ -64,7 +64,7 @@ implementation
 
 procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
-  RegisterListener(@UpdateData);
+  RegisterDataUpdateListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
   FQuery := TDirectoryQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
@@ -94,8 +94,7 @@ procedure TDirectoryForm.UpdateData;
 var id: Integer;
 begin
   id := SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
-  SQLQuery.Close;
-  SQLQuery.Open;
+  SQLQuery.Refresh;
   SetColWidth;
   SQLQuery.First;
   while (SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName] <> id) and
@@ -260,7 +259,7 @@ procedure TDirectoryForm.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
   CloseAction := caFree;
-  RemoveListener(@UpdateData);
+  RemoveDataUpdateListener(@UpdateData);
 end;
 
 procedure TDirectoryForm.FormDestroy(Sender: TObject);

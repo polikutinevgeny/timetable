@@ -616,7 +616,7 @@ object DirectoryForm: TDirectoryForm
     FieldDefs = <>
     Database = DB.IBConnection
     Transaction = DB.SQLTransaction
-    Options = [sqoAutoApplyUpdates]
+    Options = [sqoAutoApplyUpdates, sqoRefreshUsingSelect]
     Params = <>
     left = 832
     top = 8
