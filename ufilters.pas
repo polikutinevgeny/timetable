@@ -125,45 +125,57 @@ begin
     SetLength(FCols, Length(ACols));
     FCols[i] := ACols[i];
   end;
-  FColumnCB.Visible := False;
-  FColumnCB.Width := 150;
-  FColumnCB.ReadOnly := True;
-  FColumnCB.OnChange := @FilterUpdate;
-  FColumnCB.Parent := AScrollbox;
+  with FColumnCB do
+  begin
+    Visible := False;
+    Width := 150;
+    ReadOnly := True;
+    OnChange := @FilterUpdate;
+    Parent := AScrollbox;
+  end;
 end;
 
 procedure TFilter.CreateActionCB(AScrollbox: TScrollBox);
 begin
   FActionCB := TComboBox.Create(AScrollbox);
-  FActionCB.Visible := False;
-  FActionCB.Items.AddStrings(Actions);
-  FActionCB.Width := 80;
-  FActionCB.ReadOnly := True;
-  FActionCB.OnChange := @FilterUpdate;
-  FActionCB.Parent := AScrollbox;
+  with FActionCB do
+  begin
+    Visible := False;
+    Items.AddStrings(Actions);
+    Width := 80;
+    ReadOnly := True;
+    OnChange := @FilterUpdate;
+    Parent := AScrollbox;
+  end;
 end;
 
 procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
 begin
   FValueTE := TEdit.Create(AScrollbox);
-  FValueTE.Visible := False;
-  FValueTE.Text := '';
-  FValueTE.Width := 300;
-  FValueTE.OnChange := @FilterUpdate;
-  FValueTE.Parent := AScrollbox;
+  with FValueTE do
+  begin
+    Visible := False;
+    Text := '';
+    Width := 300;
+    OnChange := @FilterUpdate;
+    Parent := AScrollbox;
+  end;
 end;
 
 procedure TFilter.CreateRemoveBtn(AScrollbox: TScrollBox);
 begin
   FRemoveBtn := TRemoveButton.Create(AScrollbox);
-  FRemoveBtn.Visible := False;
-  FRemoveBtn.Width := 34;
-  FRemoveBtn.Height := 34;
-  FRemoveBtn.Glyph := RemoveGlyph;
-  FRemoveBtn.Hint := 'Remove filter';
-  FRemoveBtn.ShowHint := True;
-  FRemoveBtn.Parent := AScrollbox;
-  FRemoveBtn.OnClick := @FilterRemove;
+  with FRemoveBtn do
+  begin
+    Visible := False;
+    Width := 34;
+    Height := 34;
+    Glyph := RemoveGlyph;
+    Hint := 'Remove filter';
+    ShowHint := True;
+    Parent := AScrollbox;
+    OnClick := @FilterRemove;
+  end;
 end;
 
 constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;

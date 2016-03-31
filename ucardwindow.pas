@@ -173,10 +173,13 @@ var
 begin
   CreateLabel(ACol);
   tsq := TSQLQuery.Create(ScrollBox);
-  tsq.DataBase := UDB.DB.IBConnection;
-  tsq.Transaction := SQLTransaction;
-  tsq.SQL.Text := FQuery.ComboboxQueryAsText(ACol);
-  tsq.Open;
+  with tsq do
+  begin
+    DataBase := UDB.DB.IBConnection;
+    Transaction := SQLTransaction;
+    SQL.Text := FQuery.ComboboxQueryAsText(ACol);
+    Open;
+  end;
   tds := TDataSource.Create(ScrollBox);
   tds.DataSet := tsq;
   tcb := TDBLookupComboBox.Create(ScrollBox);
@@ -202,14 +205,17 @@ procedure TCardWindow.GetID;
 var tq: TSQLQuery;
 begin
   tq := TSQLQuery.Create(Self);
-  tq.SQLTransaction := SQLTransaction;
-  tq.DataBase := UDB.DB.IBConnection;
-  tq.SQL.Text := Format('SELECT gen_id(%s, 0) AS ID FROM rdb$database',
-    [Table.GeneratorName]);
-  tq.Open;
-  ID := tq.FieldByName('ID').AsInteger;
-  FMode := cmEdit;
-  tq.Free;
+  with tq do
+  begin
+    SQLTransaction := SQLTransaction;
+    DataBase := UDB.DB.IBConnection;
+    SQL.Text := Format('SELECT gen_id(%s, 0) AS ID FROM rdb$database',
+      [Table.GeneratorName]);
+    Open;
+    ID := FieldByName('ID').AsInteger;
+    FMode := cmEdit;
+    Free;
+  end;
   FQuery.Free;
   PrepareQuery;
 end;
