@@ -242,7 +242,6 @@ begin
   Check;
   SQLQuery.Edit;
   SQLQuery.Post;
-  SQLQuery.ApplyUpdates;
   SQLTransaction.CommitRetaining;
   UDB.DB.SQLTransaction.CommitRetaining;
   OnDataUpdate;

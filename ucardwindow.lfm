@@ -1,10 +1,10 @@
 object CardWindow: TCardWindow
   Left = 594
-  Height = 597
+  Height = 600
   Top = 143
   Width = 700
   Caption = 'Object card'
-  ClientHeight = 597
+  ClientHeight = 600
   ClientWidth = 700
   OnClose = FormClose
   OnShow = FormShow
@@ -12,7 +12,7 @@ object CardWindow: TCardWindow
   object ToolBar: TToolBar
     Left = 0
     Height = 65
-    Top = 532
+    Top = 535
     Width = 700
     Align = alBottom
     ButtonHeight = 64
@@ -49,7 +49,7 @@ object CardWindow: TCardWindow
   end
   object ScrollBox: TScrollBox
     Left = 0
-    Height = 532
+    Height = 535
     Top = 0
     Width = 700
     HorzScrollBar.Page = 1
@@ -61,7 +61,7 @@ object CardWindow: TCardWindow
     FieldDefs = <>
     Database = DB.IBConnection
     Transaction = DB.SQLTransaction
-    Options = []
+    Options = [sqoAutoApplyUpdates]
     Params = <>
     UpdateMode = upWhereAll
     left = 40
