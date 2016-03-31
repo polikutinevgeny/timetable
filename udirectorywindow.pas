@@ -14,9 +14,9 @@ type
   { TDirectoryForm }
 
   TDirectoryForm = class(TForm)
-    AddFilterBtn: TBitBtn;
-    ExecuteBtn: TBitBtn;
+    AddFilterBtn: TSpeedButton;
     ArrowIL: TImageList;
+    ExecuteBtn: TSpeedButton;
     ToolBarIL: TImageList;
     PairSplitter: TPairSplitter;
     PairSplitterUpperSide: TPairSplitterSide;
@@ -58,9 +58,6 @@ type
 
 implementation
 
-var
-  AddGlyph, ApplyGlyph: TBitmap;
-
 {$R *.lfm}
 
 { TDirectoryForm }
@@ -69,8 +66,6 @@ procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
   RegisterListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
-  AddFilterBtn.Glyph := AddGlyph;
-  ExecuteBtn.Glyph := ApplyGlyph;
   FQuery := TDirectoryQuery.Create(CurrentTable, nil);
   SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
   SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
@@ -276,14 +271,5 @@ begin
     FFilters[i].Free;
 end;
 
-initialization
-  AddGlyph := TBitmap.Create;
-  AddGlyph.LoadFromFile('icons/Add.bmp');
-  AddGlyph.TransparentColor := clWhite;
-  AddGlyph.Transparent := True;
-  ApplyGlyph := TBitmap.Create;
-  ApplyGlyph.LoadFromFile('icons/Apply.bmp');
-  ApplyGlyph.TransparentColor := clWhite;
-  ApplyGlyph.Transparent := True;
 end.
 
