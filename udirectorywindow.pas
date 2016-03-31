@@ -43,7 +43,7 @@ type
     procedure RemoveBtnClick(Sender: TObject);
   private
     FFilters: array of TFilter;
-    FQuery: TQuery;
+    FQuery: TDirectoryQuery;
     FSortedColumn: TColumn;
     procedure UpdateStatus;
     procedure UpdateData;
@@ -51,6 +51,7 @@ type
     procedure SetColWidth;
     procedure ExecuteQuery;
     procedure UpdateSortOrder(ATitle: String; ATag: Integer);
+    procedure StartEdit;
   public
     CurrentTable: TTable;
   end;
@@ -70,8 +71,8 @@ begin
   Caption := CurrentTable.DisplayName;
   AddFilterBtn.Glyph := AddGlyph;
   ExecuteBtn.Glyph := ApplyGlyph;
-  FQuery := TQuery.Create(CurrentTable, nil);
-  SQLQuery.SQL.Text := FQuery.QueryAsText;
+  FQuery := TDirectoryQuery.Create(CurrentTable, nil);
+  SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
   SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
   SQLQuery.Prepare;
   SQLQuery.Open;
@@ -130,12 +131,11 @@ procedure TDirectoryForm.SetColWidth;
 var i: Integer;
 begin
   DBGrid.Columns.Items[0].Width := FQuery.BaseTable.PrimaryKey.Width;
-  for i := 1 to High(FQuery.Cols) do
-    DBGrid.Columns.Items[i].Width := FQuery.Cols[i - 1].Width;
+  for i := 0 to High(FQuery.Cols) do
+    DBGrid.Columns.Items[i + 1].Width := FQuery.Cols[i].Width;
 end;
 
-procedure TDirectoryForm.ExecuteQuery;
-const SortDirection: array[0..1] of String = ('DESC', 'ASC');
+procedure TDirectoryForm.ExecuteQuery; //make this more readable
 var
   i, t: Integer;
   s: String;
@@ -150,19 +150,16 @@ begin
   ExecuteBtn.Enabled := False;
   SQLQuery.Close;
   FQuery.Free;
-  FQuery := TQuery.Create(CurrentTable, FFilters);
+  FQuery := TDirectoryQuery.Create(CurrentTable, FFilters);
   try
-    SQLQuery.SQL.Text := FQuery.QueryAsText;
     if sorted then
-      SQLQuery.SQL.Text := SQLQuery.SQL.Text + ' ORDER BY "' +
-        s + '" ' + SortDirection[t] + ';';
+      SQLQuery.SQL.Text := FQuery.SelectQueryAsText(s, SortDirection[t])
+    else
+      SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
     SQLQuery.Prepare;
     for i := 0 to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
     SQLQuery.Open;
-    if sorted then
-      UpdateSortOrder(s, t);
-    SetColWidth;
   except
     on E: Exception do
     begin
@@ -173,6 +170,9 @@ begin
       Exit;
     end;
   end;
+  if sorted then
+    UpdateSortOrder(s, t);
+  SetColWidth;
 end;
 
 procedure TDirectoryForm.UpdateSortOrder(ATitle: String; ATag: Integer);
@@ -187,7 +187,7 @@ begin
     begin
       FSortedColumn := DBGrid.Columns.Items[i];
       FSortedColumn.Tag := ATag;
-      if Boolean(FSortedColumn.Tag) then
+      if Boolean(ATag) then
         FSortedColumn.Title.ImageIndex := ImgArrUp
       else
         FSortedColumn.Title.ImageIndex := ImgArrDown;
@@ -196,17 +196,7 @@ begin
   end;
 end;
 
-procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);
-begin
-  ExecuteBtn.Enabled := True;
-  SetLength(FFilters, Length(FFilters) + 1);
-  FFilters[High(FFilters)] := TFilter.Create(
-    FilterSB, CurrentTable, FQuery.Cols);
-  FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
-  FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
-end;
-
-procedure TDirectoryForm.DBGridDblClick(Sender: TObject); //duplicate
+procedure TDirectoryForm.StartEdit;
 var
   t: TCardWindow;
   id: Integer;
@@ -219,9 +209,24 @@ begin
     Exit;
   end;
   t := TCardWindow.Create(Application);
-  t.Setup(CurrentTable, id);
+  t.Setup(CurrentTable, id, cmEdit);
   RegisterCard(t);
   t.Show;
+end;
+
+procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);
+begin
+  ExecuteBtn.Enabled := True;
+  SetLength(FFilters, Length(FFilters) + 1);
+  FFilters[High(FFilters)] := TFilter.Create(
+    FilterSB, CurrentTable, FQuery.Cols);
+  FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
+  FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
+end;
+
+procedure TDirectoryForm.DBGridDblClick(Sender: TObject);
+begin
+  StartEdit;
 end;
 
 procedure TDirectoryForm.AddBtnClick(Sender: TObject);
@@ -229,7 +234,7 @@ var
   t: TCardWindow;
 begin
   t := TCardWindow.Create(Application);
-  t.Setup(CurrentTable, -1);
+  t.Setup(CurrentTable);
   RegisterCard(t);
   t.Show;
 end;
@@ -245,21 +250,8 @@ begin
 end;
 
 procedure TDirectoryForm.EditBtnClick(Sender: TObject);
-var
-  t: TCardWindow;
-  id: Integer;
 begin
-  id := DBGrid.DataSource.DataSet.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
-  t := CheckCardExistence(CurrentTable, id);
-  if t <> nil then
-  begin
-    t.BringToFront;
-    Exit;
-  end;
-  t := TCardWindow.Create(Application);
-  t.Setup(CurrentTable, id);
-  RegisterCard(t);
-  t.Show;
+  StartEdit;
 end;
 
 procedure TDirectoryForm.ExecuteBtnClick(Sender: TObject);

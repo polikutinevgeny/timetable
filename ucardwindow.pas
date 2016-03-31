@@ -10,6 +10,10 @@ uses
 
 type
 
+  TCardMode = (cmNew, cmEdit);
+
+  TCardNotFilledException = class(Exception);
+
   { TCardWindow }
 
   TCardWindow = class(TForm)
@@ -28,16 +32,20 @@ type
     procedure OKBtnClick(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
   private
-    function MakeQuery: String;
-    function MakeComboboxQuery(ACol: TCol): String;
-    function MakeInsertQuery: String;
-    function MakeUpdateQuery: String;
+    FQuery: TCardQuery;
+    FComboboxes: array of TDBLookupComboBox;
+    FMode: TCardMode;
+    procedure CreateLabel(ACol: TCol);
     procedure AddEdit(ACol: TCol);
     procedure AddCB(ACol: TCol);
+    procedure GetID;
+    procedure PrepareQuery;
+    procedure Check;
+    procedure Finish;
   public
     Table: TTable;
     ID: Integer;
-    procedure Setup(ATable: TTable; AID: Integer);
+    procedure Setup(ATable: TTable; AID: Integer = -1; AMode: TCardMode = cmNew);
   end;
 
   procedure RegisterCard(ACard: TCardWindow);
@@ -89,11 +97,7 @@ end;
 procedure TCardWindow.FormShow(Sender: TObject);
 var i: Integer;
 begin
-  SQLQuery.SQL.Text := MakeQuery;
-  SQLQuery.UpdateSQL.Text := MakeUpdateQuery;
-  SQLQuery.InsertSQL.Text := MakeInsertQuery;
-  SQLQuery.Prepare;
-  SQLQuery.Open;
+  PrepareQuery;
   for i := 0 to High(Table.Cols) do
     AddEdit(Table.Cols[i]);
   for i := 0 to High(Table.ForeignKeys) do
@@ -102,113 +106,35 @@ end;
 
 procedure TCardWindow.OKBtnClick(Sender: TObject);
 begin
-  SQLQuery.Edit;
-  SQLQuery.Post;
-  SQLQuery.ApplyUpdates;
-  SQLTransaction.Commit;
-  UDB.DB.SQLTransaction.CommitRetaining;
-  OnDataUpdate;
+  try
+    Finish;
+  except
+    on E: Exception do
+    begin
+      MessageDlg('Error', E.Message, mtError, [mbOK], 0);
+      Exit;
+    end;
+  end;
   Close;
 end;
 
 procedure TCardWindow.SaveBtnClick(Sender: TObject);
-var tq: TSQLQuery;
 begin
-  SQLQuery.Edit;
-  SQLQuery.Post;
-  SQLQuery.ApplyUpdates;
-  SQLTransaction.CommitRetaining;
-  UDB.DB.SQLTransaction.CommitRetaining;
-  OnDataUpdate;
-  if ID = -1 then
-  begin
-    tq := TSQLQuery.Create(Self);
-    tq.SQLTransaction := SQLTransaction;
-    tq.DataBase := UDB.DB.IBConnection;
-    tq.SQL.Text := 'SELECT gen_id(' + Table.GeneratorName + ', 0) AS ID FROM rdb$database';
-    tq.Open;
-    ID := tq.FieldByName('ID').AsInteger;
-    tq.Free;
-    SQLQuery.Close;
-    SQLQuery.SQL.Text := MakeQuery;
-    SQLQuery.UpdateSQL.Text := MakeUpdateQuery;
-    SQLQuery.InsertSQL.Text := MakeInsertQuery;
-    SQLQuery.Prepare;
-    SQLQuery.Open;
+  try
+    Finish;
+  except
+    on E: Exception do
+    begin
+      MessageDlg('Error', E.Message, mtError, [mbOK], 0);
+      Exit;
+    end;
   end;
+  if FMode = cmNew then
+    GetID;
 end;
 
-function TCardWindow.MakeQuery: String;
-var i: Integer;
-begin
-  Result := 'SELECT ';
-  for i := 0 to High(Table.Cols) - 1 do
-    Result += Table.Cols[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) = 0 then
-    Result += Table.Cols[High(Table.Cols)].SQLName + ' ';
-  for i := 0 to High(Table.ForeignKeys) - 1 do
-    Result += Table.ForeignKeys[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) <> 0 then
-    Result += Table.ForeignKeys[High(Table.ForeignKeys)].SQLName + ' ';
-  Result += 'FROM ' + Table.SQLName + ' ';
-  Result += 'WHERE ' + Table.PrimaryKey.SQLName + ' = ' + IntToStr(ID)
-end;
-
-function TCardWindow.MakeComboboxQuery(ACol: TCol): String;
-var i: Integer;
-begin
-  Result := 'SELECT ' + ACol.Reference.Table.PrimaryKey.SQLName + ', ';
-  for i := 0 to High(ACol.Reference.Table.Cols) - 1 do
-    Result += ACol.Reference.Table.Cols[i].SQLName + ' || '' '' || ';
-  Result += ACol.Reference.Table.Cols[High(ACol.Reference.Table.Cols)].SQLName;
-  Result += ' AS Data ';
-  Result += ' FROM ' + ACol.Reference.Table.SQLName;
-end;
-
-function TCardWindow.MakeInsertQuery: String;
-var i: Integer;
-begin
-  Result := 'INSERT INTO ' + Table.SQLName + ' (';
-  for i := 0 to High(Table.Cols) - 1 do
-    Result += Table.Cols[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) = 0 then
-    Result += Table.Cols[High(Table.Cols)].SQLName + ' ) ';
-  for i := 0 to High(Table.ForeignKeys) - 1 do
-    Result += Table.ForeignKeys[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) <> 0 then
-    Result += Table.ForeignKeys[High(Table.ForeignKeys)].SQLName + ' ) ';
-  Result += 'VALUES(';
-  for i := 0 to High(Table.Cols) - 1 do
-    Result += ':' + Table.Cols[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) = 0 then
-    Result += ':' + Table.Cols[High(Table.Cols)].SQLName + ' )';
-  for i := 0 to High(Table.ForeignKeys) - 1 do
-    Result += ':' + Table.ForeignKeys[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) <> 0 then
-    Result += ':' + Table.ForeignKeys[High(Table.ForeignKeys)].SQLName + ' )';
-end;
-
-function TCardWindow.MakeUpdateQuery: String;
-var i: Integer;
-begin
-  Result := 'UPDATE ' + Table.SQLName + ' SET ';
-  for i := 0 to High(Table.Cols) - 1 do
-    Result += Table.Cols[i].SQLName + '=:' + Table.Cols[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) = 0 then
-    Result += Table.Cols[High(Table.Cols)].SQLName + '=:' +
-      Table.Cols[High(Table.Cols)].SQLName;
-  for i := 0 to High(Table.ForeignKeys) - 1 do
-    Result += Table.ForeignKeys[i].SQLName + '=:' +
-      Table.ForeignKeys[i].SQLName + ', ';
-  if Length(Table.ForeignKeys) <> 0 then
-    Result += Table.ForeignKeys[High(Table.ForeignKeys)].SQLName + '=:' +
-      Table.ForeignKeys[High(Table.ForeignKeys)].SQLName;
-  Result += ' WHERE ' + Table.PrimaryKey.SQLName + ' = ' + IntToStr(ID);
-end;
-
-procedure TCardWindow.AddEdit(ACol: TCol);
+procedure TCardWindow.CreateLabel(ACol: TCol);
 var
-  te: TDBEdit;
   tl: TLabel;
 begin
   tl := TLabel.Create(ScrollBox);
@@ -216,6 +142,13 @@ begin
   tl.Left := 20;
   tl.Top := 20 + 50 * ScrollBox.Tag;
   tl.Parent := ScrollBox;
+end;
+
+procedure TCardWindow.AddEdit(ACol: TCol);
+var
+  te: TDBEdit;
+begin
+  CreateLabel(ACol);
   te := TDBEdit.Create(ScrollBox);
   te.DataSource := DataSource;
   te.DataField := ACol.SQLName;
@@ -231,20 +164,15 @@ var
   tcb: TDBLookupComboBox;
   tds: TDataSource;
   tsq: TSQLQuery;
-  tl: TLabel;
 begin
-  tsq := TSQLQuery.Create(ScrollBox); //CreateQuery?
+  tsq := TSQLQuery.Create(ScrollBox);
   tsq.DataBase := UDB.DB.IBConnection;
   tsq.Transaction := SQLTransaction;
   tds := TDataSource.Create(ScrollBox);
   tds.DataSet := tsq;
-  tsq.SQL.Text := MakeComboboxQuery(ACol);
+  tsq.SQL.Text := FQuery.ComboboxQueryAsText(ACol);
   tsq.Open;
-  tl := TLabel.Create(ScrollBox);
-  tl.Caption := ACol.DisplayName;
-  tl.Left := 20;
-  tl.Top := 20 + 50 * ScrollBox.Tag;
-  tl.Parent := ScrollBox;
+  CreateLabel(ACol);
   tcb := TDBLookupComboBox.Create(ScrollBox);
   tcb.DataSource := DataSource;
   tcb.DataField := ACol.SQLName;
@@ -256,7 +184,56 @@ begin
   tcb.Top := 20 + 50 * ScrollBox.Tag;
   tcb.Width := 400;
   tcb.Parent := ScrollBox;
+  SetLength(FComboboxes, Length(FComboboxes) + 1);
+  FComboboxes[High(FComboboxes)] := tcb;
   ScrollBox.Tag := ScrollBox.Tag + 1;
+end;
+
+procedure TCardWindow.GetID;
+var tq: TSQLQuery;
+begin
+  tq := TSQLQuery.Create(Self);
+  tq.SQLTransaction := SQLTransaction;
+  tq.DataBase := UDB.DB.IBConnection;
+  tq.SQL.Text := Format('SELECT gen_id(%s, 0) AS ID FROM rdb$database',
+    [Table.GeneratorName]);
+  tq.Open;
+  ID := tq.FieldByName('ID').AsInteger;
+  FMode := cmEdit;
+  tq.Free;
+  FQuery.Free;
+  PrepareQuery;
+end;
+
+procedure TCardWindow.PrepareQuery;
+begin
+  FQuery := TCardQuery.Create(Table, ID);
+    if SQLQuery.Active then
+      SQLQuery.Close;
+    SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
+    SQLQuery.UpdateSQL.Text := FQuery.UpdateQueryAsText;
+    SQLQuery.InsertSQL.Text := FQuery.InsertQueryAsText;
+    SQLQuery.Prepare;
+    SQLQuery.Open;
+end;
+
+procedure TCardWindow.Check;
+var i: Integer;
+begin
+  for i := 0 to High(FComboboxes) do
+    if FComboboxes[i].ItemIndex = -1 then
+      raise TCardNotFilledException.Create('Please fill the card');
+end;
+
+procedure TCardWindow.Finish;
+begin
+  Check;
+  SQLQuery.Edit;
+  SQLQuery.Post;
+  SQLQuery.ApplyUpdates;
+  SQLTransaction.CommitRetaining;
+  UDB.DB.SQLTransaction.CommitRetaining;
+  OnDataUpdate;
 end;
 
 procedure TCardWindow.FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -272,10 +249,11 @@ begin
   Close;
 end;
 
-procedure TCardWindow.Setup(ATable: TTable; AID: Integer);
+procedure TCardWindow.Setup(ATable: TTable; AID: Integer; AMode: TCardMode);
 begin
   Table := ATable;
   ID := AID;
+  FMode := AMode;
 end;
 
 end.

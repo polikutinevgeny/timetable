@@ -19,9 +19,12 @@ object CardWindow: TCardWindow
     ButtonWidth = 64
     Caption = 'ToolBar'
     Images = ToolBarIL
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
     object OKBtn: TToolButton
       Left = 1
+      Hint = 'OK'
       Top = 2
       Caption = 'OKBtn'
       ImageIndex = 0
@@ -29,6 +32,7 @@ object CardWindow: TCardWindow
     end
     object SaveBtn: TToolButton
       Left = 69
+      Hint = 'Apply'
       Top = 2
       Caption = 'SaveBtn'
       ImageIndex = 2
@@ -36,6 +40,7 @@ object CardWindow: TCardWindow
     end
     object CancelBtn: TToolButton
       Left = 137
+      Hint = 'Cancel'
       Top = 2
       Caption = 'CancelBtn'
       ImageIndex = 1
