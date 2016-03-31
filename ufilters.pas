@@ -5,15 +5,14 @@ unit UFilters;
 interface
 
 uses
-  Classes, SysUtils, UMetadata, Forms, StdCtrls, LMessages, LCLIntf, messages,
+  Classes, SysUtils, UMetadata, Forms, StdCtrls,
   Buttons, Graphics;
 
 type
   { TRemoveButton }
 
-  TRemoveButton = class(TBitBtn)
+  TRemoveButton = class(TSpeedButton)
     procedure Click; override;
-    procedure HandleRelease(var Msg: TMessage); message CM_RELEASE;
   end;
 
   TFilterUpdateEvent = procedure of object;
@@ -73,11 +72,6 @@ var RemoveGlyph: TBitmap;
 procedure TRemoveButton.Click;
 begin
   inherited Click;
-  PostMessage(Handle, CM_RELEASE, 0, 0);
-end;
-
-procedure TRemoveButton.HandleRelease(var Msg: TMessage);
-begin
   Free;
 end;
 
@@ -112,7 +106,7 @@ begin
   FRemoveBtn := nil; //Button will remove itself after click
   OnFilterUpdate;
   OnFilterRemove(Self);
-  Self.Free;
+  Free;
 end;
 
 procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
@@ -173,6 +167,7 @@ begin
     Glyph := RemoveGlyph;
     Hint := 'Remove filter';
     ShowHint := True;
+    Flat := True;
     Parent := AScrollbox;
     OnClick := @FilterRemove;
   end;
