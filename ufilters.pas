@@ -118,7 +118,7 @@ end;
 procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
 var i: Integer;
 begin
-  FColumnCB := TComboBox.Create(nil);
+  FColumnCB := TComboBox.Create(AScrollbox);
   for i := 0 to High(ACols) do
   begin
     FColumnCB.Items.Add(ACols[i].DisplayName);
@@ -134,7 +134,7 @@ end;
 
 procedure TFilter.CreateActionCB(AScrollbox: TScrollBox);
 begin
-  FActionCB := TComboBox.Create(nil);
+  FActionCB := TComboBox.Create(AScrollbox);
   FActionCB.Visible := False;
   FActionCB.Items.AddStrings(Actions);
   FActionCB.Width := 80;
@@ -145,7 +145,7 @@ end;
 
 procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
 begin
-  FValueTE := TEdit.Create(nil);
+  FValueTE := TEdit.Create(AScrollbox);
   FValueTE.Visible := False;
   FValueTE.Text := '';
   FValueTE.Width := 300;
@@ -155,7 +155,7 @@ end;
 
 procedure TFilter.CreateRemoveBtn(AScrollbox: TScrollBox);
 begin
-  FRemoveBtn := TRemoveButton.Create(nil);
+  FRemoveBtn := TRemoveButton.Create(AScrollbox);
   FRemoveBtn.Visible := False;
   FRemoveBtn.Width := 34;
   FRemoveBtn.Height := 34;

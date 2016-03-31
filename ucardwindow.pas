@@ -138,10 +138,13 @@ var
   tl: TLabel;
 begin
   tl := TLabel.Create(ScrollBox);
-  tl.Caption := ACol.DisplayName;
-  tl.Left := 20;
-  tl.Top := 20 + 50 * ScrollBox.Tag;
-  tl.Parent := ScrollBox;
+  with tl do
+  begin
+    Caption := ACol.DisplayName;
+    Left := 20;
+    Top := 20 + 50 * ScrollBox.Tag;
+    Parent := ScrollBox;
+  end;
 end;
 
 procedure TCardWindow.AddEdit(ACol: TCol);
@@ -150,12 +153,15 @@ var
 begin
   CreateLabel(ACol);
   te := TDBEdit.Create(ScrollBox);
-  te.DataSource := DataSource;
-  te.DataField := ACol.SQLName;
-  te.Width := 400;
-  te.Left := 150;
-  te.Top := 20 + 50 * ScrollBox.Tag;
-  te.Parent := ScrollBox;
+  with te do
+  begin
+    DataSource := Self.DataSource;
+    DataField := ACol.SQLName;
+    Width := 400;
+    Left := 150;
+    Top := 20 + 50 * ScrollBox.Tag;
+    Parent := ScrollBox;
+  end;
   ScrollBox.Tag := ScrollBox.Tag + 1;
 end;
 
@@ -165,25 +171,28 @@ var
   tds: TDataSource;
   tsq: TSQLQuery;
 begin
+  CreateLabel(ACol);
   tsq := TSQLQuery.Create(ScrollBox);
   tsq.DataBase := UDB.DB.IBConnection;
   tsq.Transaction := SQLTransaction;
-  tds := TDataSource.Create(ScrollBox);
-  tds.DataSet := tsq;
   tsq.SQL.Text := FQuery.ComboboxQueryAsText(ACol);
   tsq.Open;
-  CreateLabel(ACol);
+  tds := TDataSource.Create(ScrollBox);
+  tds.DataSet := tsq;
   tcb := TDBLookupComboBox.Create(ScrollBox);
-  tcb.DataSource := DataSource;
-  tcb.DataField := ACol.SQLName;
-  tcb.ListSource := tds;
-  tcb.ListField := 'Data';
-  tcb.KeyField := ACol.Reference.SQLName;
-  tcb.Style := csDropDownList;
-  tcb.Left := 150;
-  tcb.Top := 20 + 50 * ScrollBox.Tag;
-  tcb.Width := 400;
-  tcb.Parent := ScrollBox;
+  with tcb do
+  begin
+    DataSource := Self.DataSource;
+    DataField := ACol.SQLName;
+    ListSource := tds;
+    ListField := 'Data';
+    KeyField := ACol.Reference.SQLName;
+    Style := csDropDownList;
+    Left := 150;
+    Top := 20 + 50 * ScrollBox.Tag;
+    Width := 400;
+    Parent := ScrollBox;
+  end;
   SetLength(FComboboxes, Length(FComboboxes) + 1);
   FComboboxes[High(FComboboxes)] := tcb;
   ScrollBox.Tag := ScrollBox.Tag + 1;
@@ -208,13 +217,16 @@ end;
 procedure TCardWindow.PrepareQuery;
 begin
   FQuery := TCardQuery.Create(Table, ID);
-    if SQLQuery.Active then
-      SQLQuery.Close;
-    SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
-    SQLQuery.UpdateSQL.Text := FQuery.UpdateQueryAsText;
-    SQLQuery.InsertSQL.Text := FQuery.InsertQueryAsText;
-    SQLQuery.Prepare;
-    SQLQuery.Open;
+  with SQLQuery do
+  begin;
+    if Active then
+      Close;
+    SQL.Text := FQuery.SelectQueryAsText;
+    UpdateSQL.Text := FQuery.UpdateQueryAsText;
+    InsertSQL.Text := FQuery.InsertQueryAsText;
+    Prepare;
+    Open;
+  end;
 end;
 
 procedure TCardWindow.Check;
@@ -241,11 +253,11 @@ begin
   CloseAction := caFree;
   RemoveCard(Self);
   SQLTransaction.Rollback;
+  FQuery.Free;
 end;
 
 procedure TCardWindow.CancelBtnClick(Sender: TObject);
 begin
-  SQLTransaction.Rollback;
   Close;
 end;
 

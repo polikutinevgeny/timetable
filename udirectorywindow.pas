@@ -106,6 +106,8 @@ begin
   while (SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName] <> id) and
     not SQLQuery.EOF do
     SQLQuery.Next;
+  if SQLQuery.EOF then
+    SQLQuery.First;
 end;
 
 procedure TDirectoryForm.RemoveFilter(Sender: TObject);

@@ -120,7 +120,7 @@
     </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="7">
+    <Exceptions Count="9">
       <Item1>
         <Name Value="EAbort"/>
       </Item1>
@@ -143,6 +143,12 @@
       <Item7>
         <Name Value="TCardNotFilledException"/>
       </Item7>
+      <Item8>
+        <Name Value="EIBDatabaseError"/>
+      </Item8>
+      <Item9>
+        <Name Value="EUpdateError"/>
+      </Item9>
     </Exceptions>
   </Debugging>
 </CONFIG>
