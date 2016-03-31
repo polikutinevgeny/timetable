@@ -197,7 +197,7 @@ var
   t: TCardWindow;
   id: Integer;
 begin
-  id := DBGrid.DataSource.DataSet.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
+  id := SQLQuery.FieldValues[FQuery.BaseTable.PrimaryKey.DisplayName];
   t := CheckCardExistence(CurrentTable, id);
   if t <> nil then
   begin
