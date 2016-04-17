@@ -45,8 +45,9 @@ type
     FCols: TStringArray;
     FRows: TStringArray;
     FData: array of array of array of String;
-    FFilledRows: array of Boolean;
-    FFilledCols: array of Boolean;
+    FFilters: array of TFilter;
+    procedure UpdateStatus;
+    procedure RemoveFilter(Sender: TObject);
     procedure SetupData;
     procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox);
     { private declarations }
@@ -69,7 +70,6 @@ var
   s: string;
   style: TTextStyle;
   i: Integer;
-  rowshift, colshift: array of Integer;
 begin
   with style do
   begin
@@ -99,6 +99,30 @@ begin
   end;
 end;
 
+procedure TTimetableWindow.UpdateStatus;
+begin
+  ApplyBtn.Enabled := True;
+end;
+
+procedure TTimetableWindow.RemoveFilter(Sender: TObject);
+var i, j: Integer;
+begin
+  for i := 0 to High(FFilters) do
+  begin
+    if FFilters[i] = Sender then
+    begin
+      FilterSB.Tag := i;
+      for j := i to High(FFilters) - 1 do
+      begin
+        FFilters[j] := FFilters[j + 1];
+        FFilters[j].Draw(FilterSB);
+      end;
+      SetLength(FFilters, Length(FFilters) - 1);
+      break;
+    end;
+  end;
+end;
+
 procedure TTimetableWindow.SetupFixed(var ANames: TStringArray;
   ACombobox: TComboBox);
 begin
@@ -117,23 +141,29 @@ begin
 end;
 
 procedure TTimetableWindow.SetupData;
-var i, j, k: Integer;
+var
+  i, j, k: Integer;
+  fr, fc: array of Boolean;
 begin
   FQuery.Free;
-  FQuery := TTimetableQuery.Create(Metadata.TimetableTable, nil);
+  FQuery := TTimetableQuery.Create(Metadata.TimetableTable, FFilters);
   SQLQuery.Close;
   SQLQuery.SQL.Text := FQuery.TimetableQueryAsText(
     VerticalCB.Items[VerticalCB.ItemIndex],
     HorizontalCB.Items[HorizontalCB.ItemIndex]);
+  SQLQuery.Prepare;
+  for i := 0 to SQLQuery.Params.Count - 1 do
+    SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
+  ShowMessage(SQLQuery.SQL.Text);
   SQLQuery.Open;
   SetLength(FData, 0, 0, 0);
   SetLength(FData, Length(FRows), Length(FCols));
-  SetLength(FFilledRows, Length(FRows));
-  for i := 0 to High(FFilledRows) do
-    FFilledRows[i] := False;
-  SetLength(FFilledCols, Length(FCols));
-  for i := 0 to High(FFilledCols) do
-    FFilledCols[i] := False;
+  SetLength(fr, Length(FRows));
+  for i := 0 to High(fr) do
+    fr[i] := False;
+  SetLength(fc, Length(FCols));
+  for i := 0 to High(fc) do
+    fc[i] := False;
   for i := 0 to High(FRows) do
     for j := 0 to High(FCols) do
     begin
@@ -143,8 +173,8 @@ begin
         (FCols[j] = SQLQuery.FieldByName(HorizontalCB.Items[
           HorizontalCB.ItemIndex]).AsString) do
       begin
-        FFilledRows[i] := True;
-        FFilledCols[j] := True;
+        fr[i] := True;
+        fc[j] := True;
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
         FData[i][j][High(FData[i][j])] := '';
         for k := 0 to SQLQuery.FieldCount - 1 do
@@ -161,25 +191,27 @@ begin
     k := 0;
     for i := 0 to High(FRows) do
     begin
-      if i + k > High(FRows) then
-        break;
-      if not FFilledRows[i + k] then
-        k += 1;
-      FRows[i] := FRows[i + k];
-      FData[i] := FData[i + k];
+      if not fr[i] then
+        k += 1
+      else
+      begin
+        FRows[i - k] := FRows[i];
+        FData[i - k] := FData[i];
+      end;
     end;
     SetLength(FRows, Length(FRows) - k);
     SetLength(FData, Length(FData) - k);
     k := 0;
     for i := 0 to High(FCols) do
     begin
-      if i + k > High(FCols) then
-        break;
-      if not FFilledCols[i + k] then
-        k += 1;
-      FCols[i] := FCols[i + k];
-      for j := 0 to High(FRows) do
-        FData[j][i] := FData[j][i + k];
+      if not fc[i] then
+        k += 1
+      else
+      begin
+        FCols[i - k] := FCols[i];
+        for j := 0 to High(FRows) do
+          FData[j][i - k] := FData[j][i];
+      end;
     end;
     SetLength(FCols, Length(FCols) - k);
     SetLength(FData, Length(FData), Length(FData[0]) - k);
@@ -211,13 +243,20 @@ begin
   SetupFixed(FRows, VerticalCB);
   SetupFixed(FCols, HorizontalCB);
   SetupData;
+  TimetableDG.RowCount := 1;
+  TimetableDG.ColCount := 1;
   TimetableDG.RowCount := Length(FRows) + 1;
   TimetableDG.ColCount := Length(FCols) + 1;
 end;
 
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
 begin
-
+  ApplyBtn.Enabled := True;
+  SetLength(FFilters, Length(FFilters) + 1);
+  FFilters[High(FFilters)] := TFilter.Create(
+    FilterSB, Metadata.TimetableTable, TDirectoryQuery.GetFullColList(Metadata.TimetableTable));
+  FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
+  FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
 end;
 
 end.
