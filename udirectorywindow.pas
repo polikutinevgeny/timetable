@@ -66,7 +66,8 @@ procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
   RegisterDataUpdateListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
-  FQuery := TDirectoryQuery.Create(CurrentTable, nil);
+  FQuery := TDirectoryQuery.Create(CurrentTable, nil,
+    TDirectoryQuery.GetFullColList(CurrentTable));
   SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
   SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
   SQLQuery.Prepare;
@@ -146,7 +147,8 @@ begin
   ExecuteBtn.Enabled := False;
   SQLQuery.Close;
   FQuery.Free;
-  FQuery := TDirectoryQuery.Create(CurrentTable, FFilters);
+  FQuery := TDirectoryQuery.Create(CurrentTable, FFilters,
+    TDirectoryQuery.GetFullColList(CurrentTable));
   try
     if sorted then
       SQLQuery.SQL.Text := FQuery.SelectQueryAsText(s, SortDirection[t])

@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="9">
+    <Units Count="10">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -99,6 +99,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="UNotification"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="utimetablewindow.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="TimetableWindow"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UTimetableWindow"/>
+      </Unit9>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

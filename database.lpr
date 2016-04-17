@@ -8,7 +8,7 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
-  UQuery, UCardWindow, UNotification;
+  UQuery, UCardWindow, UNotification, UTimetableWindow;
 
 {$R *.res}
 

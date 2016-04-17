@@ -51,9 +51,10 @@ type
   TMetadata = class
     public
       Tables: array of TTable;
+      TimetableTable: TTable;
       procedure RegisterTable(
         ASQLName, ADisplayName: String; ACols: array of TCol;
-        AGenerator: String);
+        AGenerator: String; IsTimeTable: Boolean = False);
       function GetReference(ATableName: String): TCol;
   end;
 
@@ -65,18 +66,22 @@ implementation
 { TMetadata }
 
 procedure TMetadata.RegisterTable(ASQLName, ADisplayName: String;
-  ACols: array of TCol; AGenerator: String);
+  ACols: array of TCol; AGenerator: String; IsTimeTable: Boolean);
 var
   i: Integer;
+  nt: TTable;
 begin
-  SetLength(Tables, Length(Tables) + 1);
-  Tables[High(Tables)] := TTable.Create(ASQLName, ADisplayName);
+  nt := TTable.Create(ASQLName, ADisplayName);
   for i := 0 to High(ACols) do
   begin
-    Tables[High(Tables)].AddCol(ACols[i]);
-    ACols[i].Table := Tables[High(Tables)];
+    nt.AddCol(ACols[i]);
+    ACols[i].Table := nt;
   end;
-  Tables[High(Tables)].GeneratorName := AGenerator;
+  nt.GeneratorName := AGenerator;
+  SetLength(Tables, Length(Tables) + 1);
+  Tables[High(Tables)] := nt;
+  if IsTimeTable then
+    TimetableTable := nt
 end;
 
 function TMetadata.GetReference(ATableName: String): TCol;
@@ -181,6 +186,6 @@ initialization
       100, False, Metadata.GetReference('Weekdays')),
     TCol.Create('lesson_time_id', 'Lesson time', dtInteger,
       100, False, Metadata.GetReference('Lessons_Times'))],
-    'TimetableIdGenerator');
+    'TimetableIdGenerator', True);
 end.
 

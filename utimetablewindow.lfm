@@ -1,0 +1,118 @@
+object TimetableWindow: TTimetableWindow
+  Left = 513
+  Height = 680
+  Top = 113
+  Width = 880
+  Caption = 'TimetableWindow'
+  ClientHeight = 680
+  ClientWidth = 880
+  OnShow = FormShow
+  LCLVersion = '1.6.0.4'
+  object OptionsPanel: TPanel
+    Left = 0
+    Height = 120
+    Top = 0
+    Width = 880
+    Align = alTop
+    ClientHeight = 120
+    ClientWidth = 880
+    TabOrder = 0
+    object VerticalCB: TComboBox
+      Left = 16
+      Height = 33
+      Top = 72
+      Width = 160
+      ItemHeight = 25
+      TabOrder = 0
+    end
+    object HorizontalCB: TComboBox
+      Left = 184
+      Height = 33
+      Top = 72
+      Width = 160
+      ItemHeight = 25
+      TabOrder = 1
+    end
+    object ApplyBtn: TSpeedButton
+      Left = 368
+      Height = 33
+      Top = 72
+      Width = 104
+      Caption = 'Apply'
+      OnClick = ApplyBtnClick
+    end
+  end
+  object PairSplitter: TPairSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 560
+    Top = 120
+    Width = 880
+    Align = alClient
+    Position = 400
+    SplitterType = pstVertical
+    object PairSplitterSide1: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 400
+      Top = 0
+      Width = 880
+      ClientWidth = 880
+      ClientHeight = 400
+      object TimetableDG: TDrawGrid
+        Left = 0
+        Height = 400
+        Top = 0
+        Width = 880
+        Align = alClient
+        AutoAdvance = aaDown
+        AutoEdit = False
+        DefaultColWidth = 400
+        DefaultRowHeight = 200
+        ExtendedSelect = False
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goSmoothScroll, goFixedColSizing]
+        TabAdvance = aaDown
+        TabOrder = 0
+        OnDrawCell = TimetableDGDrawCell
+      end
+    end
+    object PairSplitterSide2: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 155
+      Top = 405
+      Width = 880
+      ClientWidth = 880
+      ClientHeight = 155
+      object ScrollBox1: TScrollBox
+        Left = 170
+        Height = 155
+        Top = 0
+        Width = 710
+        HorzScrollBar.Page = 1
+        VertScrollBar.Page = 1
+        Align = alClient
+        TabOrder = 0
+      end
+      object Panel1: TPanel
+        Left = 0
+        Height = 155
+        Top = 0
+        Width = 170
+        Align = alLeft
+        Caption = 'Panel1'
+        TabOrder = 1
+      end
+    end
+  end
+  object SQLQuery: TSQLQuery
+    FieldDefs = <>
+    Database = DB.IBConnection
+    Transaction = DB.SQLTransaction
+    ReadOnly = True
+    Options = []
+    Params = <>
+    left = 840
+    top = 8
+  end
+end
