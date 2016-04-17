@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Grids,
-  LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, UQuery,
+  LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, UQuery,
   UMetadata, db, sqldb, UFilters;
 
 type
@@ -15,16 +15,26 @@ type
 
   TTimetableWindow = class(TForm)
     ApplyBtn: TSpeedButton;
+    CheckListBox2: TCheckListBox;
+    CheckListBox3: TCheckListBox;
+    HideEmptyCB: TCheckBox;
+    HorizontalLbl: TLabel;
+    FieldSelectionLbl: TLabel;
+    NameSelelctionLbl: TLabel;
+    VerticalLbl: TLabel;
     PairSplitter: TPairSplitter;
     PairSplitterSide1: TPairSplitterSide;
     PairSplitterSide2: TPairSplitterSide;
-    Panel1: TPanel;
-    ScrollBox1: TScrollBox;
+    FilterControlPanel: TPanel;
+    RowColControlPanel: TPanel;
+    FilterSB: TScrollBox;
+    AddFilterBtn: TSpeedButton;
     SQLQuery: TSQLQuery;
     VerticalCB: TComboBox;
     HorizontalCB: TComboBox;
     OptionsPanel: TPanel;
     TimetableDG: TDrawGrid;
+    procedure AddFilterBtnClick(Sender: TObject);
     procedure ApplyBtnClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure TimetableDGDrawCell(Sender: TObject; aCol, aRow: Integer;
@@ -35,6 +45,8 @@ type
     FCols: TStringArray;
     FRows: TStringArray;
     FData: array of array of array of String;
+    FFilledRows: array of Boolean;
+    FFilledCols: array of Boolean;
     procedure SetupData;
     procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox);
     { private declarations }
@@ -57,6 +69,7 @@ var
   s: string;
   style: TTextStyle;
   i: Integer;
+  rowshift, colshift: array of Integer;
 begin
   with style do
   begin
@@ -115,6 +128,12 @@ begin
   SQLQuery.Open;
   SetLength(FData, 0, 0, 0);
   SetLength(FData, Length(FRows), Length(FCols));
+  SetLength(FFilledRows, Length(FRows));
+  for i := 0 to High(FFilledRows) do
+    FFilledRows[i] := False;
+  SetLength(FFilledCols, Length(FCols));
+  for i := 0 to High(FFilledCols) do
+    FFilledCols[i] := False;
   for i := 0 to High(FRows) do
     for j := 0 to High(FCols) do
     begin
@@ -124,6 +143,8 @@ begin
         (FCols[j] = SQLQuery.FieldByName(HorizontalCB.Items[
           HorizontalCB.ItemIndex]).AsString) do
       begin
+        FFilledRows[i] := True;
+        FFilledCols[j] := True;
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
         FData[i][j][High(FData[i][j])] := '';
         for k := 0 to SQLQuery.FieldCount - 1 do
@@ -135,6 +156,34 @@ begin
         SQLQuery.Next;
       end;
     end;
+  if HideEmptyCB.Checked then
+  begin;
+    k := 0;
+    for i := 0 to High(FRows) do
+    begin
+      if i + k > High(FRows) then
+        break;
+      if not FFilledRows[i + k] then
+        k += 1;
+      FRows[i] := FRows[i + k];
+      FData[i] := FData[i + k];
+    end;
+    SetLength(FRows, Length(FRows) - k);
+    SetLength(FData, Length(FData) - k);
+    k := 0;
+    for i := 0 to High(FCols) do
+    begin
+      if i + k > High(FCols) then
+        break;
+      if not FFilledCols[i + k] then
+        k += 1;
+      FCols[i] := FCols[i + k];
+      for j := 0 to High(FRows) do
+        FData[j][i] := FData[j][i + k];
+    end;
+    SetLength(FCols, Length(FCols) - k);
+    SetLength(FData, Length(FData), Length(FData[0]) - k);
+  end;
 end;
 
 procedure TTimetableWindow.FormShow(Sender: TObject);
@@ -149,12 +198,12 @@ begin
   VerticalCB.ItemIndex := 0;
   HorizontalCB.ItemIndex := 1;
   SetupFixed(FRows, VerticalCB);
-  TimetableDG.RowCount := Length(FRows) + 1;
   SetupFixed(FCols, HorizontalCB);
-  TimetableDG.ColCount := Length(FCols) + 1;
   SetupData;
+  TimetableDG.RowCount := Length(FRows) + 1;
+  TimetableDG.ColCount := Length(FCols) + 1;
   TimetableDG.RowHeights[0] := 32;
-  TimetableDG.ColWidths[0] := 150;
+  TimetableDG.ColWidths[0] := 160;
 end;
 
 procedure TTimetableWindow.ApplyBtnClick(Sender: TObject);
@@ -164,6 +213,11 @@ begin
   SetupData;
   TimetableDG.RowCount := Length(FRows) + 1;
   TimetableDG.ColCount := Length(FCols) + 1;
+end;
+
+procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
+begin
+
 end;
 
 end.

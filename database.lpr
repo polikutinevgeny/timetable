@@ -17,6 +17,7 @@ begin
   Application.Initialize;
   Application.CreateForm(TMainWindow, MainWindow);
   Application.CreateForm(TDB, DB);
+  Application.CreateForm(TTimetableWindow, TimetableWindow);
   Application.Run;
 end.
 
