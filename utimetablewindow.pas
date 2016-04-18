@@ -15,8 +15,8 @@ type
 
   TTimetableWindow = class(TForm)
     ApplyBtn: TSpeedButton;
-    CheckListBox2: TCheckListBox;
-    CheckListBox3: TCheckListBox;
+    DisplayedFieldsCLB: TCheckListBox;
+    DisplayedNamesCLB: TCheckListBox;
     HideEmptyCB: TCheckBox;
     HorizontalLbl: TLabel;
     FieldSelectionLbl: TLabel;
@@ -67,7 +67,6 @@ implementation
 procedure TTimetableWindow.TimetableDGDrawCell(Sender: TObject; aCol,
   aRow: Integer; aRect: TRect; aState: TGridDrawState);
 var
-  s: string;
   style: TTextStyle;
   i: Integer;
 begin
@@ -178,11 +177,14 @@ begin
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
         FData[i][j][High(FData[i][j])] := '';
         for k := 0 to SQLQuery.FieldCount - 1 do
-        begin
-          FData[i][j][High(FData[i][j])] +=
-            SQLQuery.Fields[k].DisplayName + ': ' + SQLQuery.Fields[k].AsString +
+          if DisplayedFieldsCLB.Checked[k] then
+          begin
+            if DisplayedNamesCLB.Checked[k] then
+              FData[i][j][High(FData[i][j])] += SQLQuery.Fields[k].DisplayName +
+                ': ';
+            FData[i][j][High(FData[i][j])] += SQLQuery.Fields[k].AsString +
             #10#13;
-        end;
+          end;
         SQLQuery.Next;
       end;
     end;
@@ -226,7 +228,11 @@ begin
   begin
     VerticalCB.AddItem(FColList[i], nil);
     HorizontalCB.AddItem(FColList[i], nil);
+    DisplayedFieldsCLB.AddItem(FColList[i], nil);
+    DisplayedNamesCLB.AddItem(FColList[i], nil);
   end;
+  DisplayedFieldsCLB.CheckAll(cbChecked);
+  DisplayedNamesCLB.CheckAll(cbChecked);
   VerticalCB.ItemIndex := 0;
   HorizontalCB.ItemIndex := 1;
   SetupFixed(FRows, VerticalCB);
@@ -235,7 +241,7 @@ begin
   TimetableDG.RowCount := Length(FRows) + 1;
   TimetableDG.ColCount := Length(FCols) + 1;
   TimetableDG.RowHeights[0] := 32;
-  TimetableDG.ColWidths[0] := 160;
+  TimetableDG.ColWidths[0] := 170;
 end;
 
 procedure TTimetableWindow.ApplyBtnClick(Sender: TObject);

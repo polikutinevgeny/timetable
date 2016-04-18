@@ -602,7 +602,7 @@ object TimetableWindow: TTimetableWindow
         ClientHeight = 152
         ClientWidth = 445
         TabOrder = 2
-        object CheckListBox2: TCheckListBox
+        object DisplayedFieldsCLB: TCheckListBox
           AnchorSideBottom.Control = RowColControlPanel
           AnchorSideBottom.Side = asrBottom
           Left = 8
@@ -622,7 +622,7 @@ object TimetableWindow: TTimetableWindow
           Caption = 'Displayed fields:'
           ParentColor = False
         end
-        object CheckListBox3: TCheckListBox
+        object DisplayedNamesCLB: TCheckListBox
           AnchorSideBottom.Control = RowColControlPanel
           AnchorSideBottom.Side = asrBottom
           Left = 224
