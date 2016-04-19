@@ -6,6 +6,8 @@ object TimetableWindow: TTimetableWindow
   Caption = 'TimetableWindow'
   ClientHeight = 755
   ClientWidth = 1349
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnShow = FormShow
   LCLVersion = '1.6.0.4'
   object OptionsPanel: TPanel
@@ -83,7 +85,7 @@ object TimetableWindow: TTimetableWindow
         Align = alClient
         AutoAdvance = aaDown
         AutoEdit = False
-        DefaultColWidth = 400
+        DefaultColWidth = 300
         DefaultRowHeight = 200
         ExtendedSelect = False
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goSmoothScroll, goFixedColSizing]

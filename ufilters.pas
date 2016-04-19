@@ -114,10 +114,10 @@ procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
 var i: Integer;
 begin
   FColumnCB := TComboBox.Create(AScrollbox);
+  SetLength(FCols, Length(ACols));
   for i := 0 to High(ACols) do
   begin
     FColumnCB.Items.Add(ACols[i].DisplayName);
-    SetLength(FCols, Length(ACols));
     FCols[i] := ACols[i];
   end;
   with FColumnCB do
