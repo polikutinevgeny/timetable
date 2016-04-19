@@ -43,6 +43,7 @@ type
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
         ACols: TColArray);
       procedure Draw(AScrollbox: TScrollBox);
+      function Copy(AScrollbox: TScrollBox): TFilter;
       property Column: TCol read GetCol;
       property Action: String read GetAction;
       property Value: String read GetValue;
@@ -199,6 +200,14 @@ begin
   FValueTE.Visible := True;
   FRemoveBtn.Visible := True;
   AScrollbox.Tag := AScrollbox.Tag + 1;
+end;
+
+function TFilter.Copy(AScrollbox: TScrollBox): TFilter;
+begin
+  Result := TFilter.Create(AScrollbox, FTable, FCols);
+  Result.FActionCB.ItemIndex := FActionCB.ItemIndex;
+  Result.FColumnCB.ItemIndex := FColumnCB.ItemIndex;
+  Result.FValueTE.Text := FValueTE.Text;
 end;
 
 destructor TFilter.Destroy;

@@ -84,38 +84,30 @@ end;
 
 function TTimetableQuery.GetSelectAsText: String;
 var i, j: Integer;
-begin     //Rewrite all this!
+begin
   Result := 'SELECT ';
-  for i := 0 to High(FTables[0].Cols) do
+  for i := 0 to High(FTables[0].Cols) do //never used, but anyway
     Result += Format('%s.%s AS "%s",', [
       FTables[0].Cols[i].Table.SQLName, FTables[0].Cols[i].SQLName,
       FTables[0].Cols[i].DisplayName]);
   for i := 0 to High(FTables[0].ForeignKeys) - 1 do
+    with FTables[0].ForeignKeys[i] do
     begin
-      for j := 0 to High(FTables[0].ForeignKeys[i].Reference.Table.Cols) - 1 do
+      for j := 0 to High(Reference.Table.Cols) - 1 do
         Result += Format('%s.%s || '' '' || ', [
-          FTables[0].ForeignKeys[i].Reference.Table.SQLName,
-          FTables[0].ForeignKeys[i].Reference.Table.Cols[j].SQLName]);
-      Result += Format('%s.%s AS "%s", ', [
-        FTables[0].ForeignKeys[i].Reference.Table.SQLName,
-        FTables[0].ForeignKeys[i].Reference.Table.Cols[High(FTables[0].ForeignKeys[i].Reference.Table.Cols)].SQLName,
-        FTables[0].ForeignKeys[i].DisplayName]);
+          Reference.Table.SQLName,
+          Reference.Table.Cols[j].SQLName]);
+      Result += Format('%s.%s AS "%s", ', [Reference.Table.SQLName,
+        Reference.Table.Cols[High(Reference.Table.Cols)].SQLName, DisplayName]);
     end;
-  for j := 0 to High(FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.Cols) - 1 do
-    Result += Format('%s.%s || '' '' || ', [
-      FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.SQLName,
-      FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.Cols[j].SQLName]);
-  Result += Format('%s.%s AS "%s"', [
-    FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.SQLName,
-    FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.Cols[High(FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].Reference.Table.Cols)].SQLName,
-    FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)].DisplayName]);
-  //for i := 0 to High(FCols) do
-  //begin
-  //  Result += Format('%s.%s AS "%s",', [
-  //    FCols[i].Table.SQLName, FCols[i].SQLName,
-  //    FCols[i].DisplayName]);
-  //end;
-  //Result[High(Result)] := ' ';
+  with FTables[0].ForeignKeys[High(FTables[0].ForeignKeys)] do
+  begin
+    for j := 0 to High(Reference.Table.Cols) - 1 do
+      Result += Format('%s.%s || '' '' || ', [Reference.Table.SQLName,
+        Reference.Table.Cols[j].SQLName]);
+    Result += Format('%s.%s AS "%s"', [Reference.Table.SQLName,
+      Reference.Table.Cols[High(Reference.Table.Cols)].SQLName, DisplayName]);
+  end;
 end;
 
 function TTimetableQuery.GetFromAsText: String;
@@ -198,13 +190,6 @@ var
   i: Integer;
   c: TCol;
 begin
-  //for i := 0 to High(FTables[0].Cols) do
-  //  if FTables[0].Cols[i].DisplayName = AName then
-  //    c := FTables[0].Cols[i];
-  //if c <> nil then
-  //begin
-  //
-  //end;
   for i := 0 to High(ATable.ForeignKeys) do
     if ATable.ForeignKeys[i].DisplayName = AName then
       c := ATable.ForeignKeys[i];
