@@ -7,9 +7,11 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Grids,
   LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, UQuery,
-  UMetadata, db, sqldb, UFilters;
+  UMetadata, db, sqldb, UFilters, math;
 
 type
+
+  PPoint = ^TPoint;
 
   { TTimetableWindow }
 
@@ -42,15 +44,18 @@ type
     procedure FormCreate(Sender: TObject);
     procedure HideEmptyCBChange(Sender: TObject);
     procedure HorizontalCBChange(Sender: TObject);
+    procedure TimetableDGClick(Sender: TObject);
     procedure TimetableDGDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
+    procedure TimetableDGMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure VerticalCBChange(Sender: TObject);
   private
     FQuery: TTimetableQuery;
     FColList: TColArray;
     FCols: TStringArray;
     FRows: TStringArray;
-    FData: array of array of array of String;
+    FData: array of array of array of array of String;
     FShowAllButtons: array of array of HRGN;
     FExpandTriangles: array of array of HRGN;
     FFilters: array of TFilter;
@@ -77,11 +82,17 @@ implementation
 
 procedure TTimetableWindow.TimetableDGDrawCell(Sender: TObject; aCol,
   aRow: Integer; aRect: TRect; aState: TGridDrawState);
+const
+  BorderMargin = 2;
+  RightMargin = 25;
 var
   style: TTextStyle;
-  i: Integer;
+  i, j, w: Integer;
+  trpts: array[0..2] of TPoint;
 begin
-  aRect.Right := aRect.Right - 25;
+  aRect.Right := aRect.Right - RightMargin;
+  DeleteObject(FExpandTriangles[aRow][aCol]);
+  FExpandTriangles[aRow][aCol] := NullRegion;
   with style do
   begin
     Alignment := taLeftJustify;
@@ -96,27 +107,67 @@ begin
   with TimetableDG do
   begin
     if (aCol <> 0) and (aRow = 0) then
-      Canvas.TextRect(aRect, aRect.Left + 2, aRect.Top + 2, FCols[aCol - 1], style)
+      Canvas.TextRect(aRect, aRect.Left + BorderMargin,
+        aRect.Top + BorderMargin, FCols[aCol - 1], style)
     else if (aCol = 0) and (aRow <> 0) then
     begin
       style.Wordbreak := True;
-      Canvas.TextRect(aRect, aRect.Left + 2, aRect.Top + 2, FRows[aRow - 1], style);
+      Canvas.TextRect(aRect, aRect.Left + BorderMargin,
+        aRect.Top + BorderMargin, FRows[aRow - 1], style);
     end
     else if (aCol <> 0) and (aRow <> 0) and
       (Length(FData[aRow - 1][aCol - 1]) <> 0) then
+    begin
       for i := 0 to High(FData[aRow - 1][aCol - 1]) do
       begin
-        Canvas.TextRect(aRect, aRect.Left + 2, aRect.Top + 2 + FRecordHeight * i,
-          FData[aRow - 1][aCol - 1][i], style);
+        w := 0;
+        for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
+        begin
+          Canvas.TextRect(aRect, aRect.Left + BorderMargin,
+            aRect.Top + BorderMargin + FRecordHeight * i +
+            Canvas.TextHeight('Hlg') * j,
+            FData[aRow - 1][aCol - 1][i][j], style);
+          w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
+        end;
         Canvas.Pen.Color := clBlack;
         if i <> 0 then
           Canvas.Line(
-            aRect.Left ,aRect.Top + 2 + FRecordHeight * i,
-            aRect.Right, aRect.Top + 2 + FRecordHeight * i);
-
-      end
+            aRect.Left ,aRect.Top + BorderMargin + FRecordHeight * i,
+            aRect.Right + RightMargin, aRect.Top + 2 + FRecordHeight * i);
+      end;
+      Canvas.Rectangle(aRect.Right, aRect.Top, aRect.Right + 25, aRect.Top + 25);
+      if (w > ColWidths[aCol] - RightMargin) or (Length(FData[aRow - 1][aCol - 1]) *
+        FRecordHeight > RowHeights[aRow]) then
+      begin
+        Canvas.Brush.Color := clBlack;
+        Canvas.Polygon([Point(aRect.Right + 25, aRect.Bottom),
+          Point(aRect.Right, aRect.Bottom), Point(aRect.Right + 25, aRect.Bottom - 25)]);
+        trpts[0] := Point(aRect.Right + 25, aRect.Bottom);
+        trpts[1] := Point(aRect.Right, aRect.Bottom);
+        trpts[2] := Point(aRect.Right + 25, aRect.Bottom - 25);
+        FExpandTriangles[aRow][aCol] := CreatePolygonRgn(trpts, 3, 1);
+      end;
+    end
     else
       Canvas.FillRect(aRect);
+  end;
+end;
+
+procedure TTimetableWindow.TimetableDGMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var col, row, i, j, w: Integer;
+begin
+  TimetableDG.MouseToCell(X, Y, col, row);
+  if PtInRegion(FExpandTriangles[row][col], X, Y) then
+  begin
+    w := 0;
+    for i := 0 to High(FData[row - 1][col - 1]) do
+      for j := 0 to High(FData[row - 1][col - 1][i]) do
+      begin;
+        w := max(w, Canvas.TextWidth(FData[row - 1][col - 1][i][j]) + 25);
+      end;
+    TimetableDG.ColWidths[col] := w;
+    TimetableDG.RowHeights[row] := Length(FData[row - 1][col - 1]) * FRecordHeight;
   end;
 end;
 
@@ -272,15 +323,16 @@ begin
         fr[i] := True;
         fc[j] := True;
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
-        FData[i][j][High(FData[i][j])] := '';
+        SetLength(FData[i][j][High(FData[i][j])], SQLQuery.FieldCount - 1);
         for k := 1 to SQLQuery.FieldCount - 1 do
           if DisplayedFieldsCLB.Checked[k - 1] then
           begin
+            FData[i][j][High(FData[i][j])][k - 1] := '';
             if DisplayedNamesCLB.Checked[k - 1] then
-              FData[i][j][High(FData[i][j])] += SQLQuery.Fields[k].DisplayName +
-                ': ';
-            FData[i][j][High(FData[i][j])] += SQLQuery.Fields[k].AsString +
-            #10#13;
+              FData[i][j][High(FData[i][j])][k - 1] +=
+                SQLQuery.Fields[k].DisplayName + ': ';
+            FData[i][j][High(FData[i][j])][k - 1] += SQLQuery.Fields[k].AsString +
+              #10#13;
           end;
         SQLQuery.Next;
       end;
@@ -290,12 +342,8 @@ begin
   end;
   SetLength(FShowAllButtons, 0, 0);
   SetLength(FExpandTriangles, 0, 0);
-  SetLength(FShowAllButtons, Length(FRows), Length(FCols));
-  for i := 0 to High(FShowAllButtons) do
-    FShowAllButtons[i] := nil;
-  SetLength(FExpandTriangles, Length(FRows), Length(FCols));
-  for i := 0 to High(FExpandTriangles) do
-    FExpandTriangles[i] := nil;
+  SetLength(FShowAllButtons, Length(FRows) + 1, Length(FCols) + 1);
+  SetLength(FExpandTriangles, Length(FRows) + 1, Length(FCols) + 1);
 end;
 
 procedure TTimetableWindow.ApplyBtnClick(Sender: TObject);
@@ -346,6 +394,11 @@ end;
 procedure TTimetableWindow.HorizontalCBChange(Sender: TObject);
 begin
   UpdateStatus;
+end;
+
+procedure TTimetableWindow.TimetableDGClick(Sender: TObject);
+begin
+
 end;
 
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
