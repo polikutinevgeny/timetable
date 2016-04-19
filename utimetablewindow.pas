@@ -36,17 +36,23 @@ type
     TimetableDG: TDrawGrid;
     procedure AddFilterBtnClick(Sender: TObject);
     procedure ApplyBtnClick(Sender: TObject);
+    procedure DisplayedFieldsCLBClickCheck(Sender: TObject);
+    procedure DisplayedNamesCLBClickCheck(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
+    procedure HideEmptyCBChange(Sender: TObject);
+    procedure HorizontalCBChange(Sender: TObject);
     procedure TimetableDGDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
+    procedure VerticalCBChange(Sender: TObject);
   private
     FQuery: TTimetableQuery;
     FColList: TColArray;
     FCols: TStringArray;
     FRows: TStringArray;
     FData: array of array of array of String;
+    FShowAllButtons: array of array of HRGN;
+    FExpandTriangles: array of array of HRGN;
     FFilters: array of TFilter;
     FRecordHeight: Integer;
     procedure DeleteEmpty(const fc: array of Boolean; const fr: array of Boolean);
@@ -55,7 +61,7 @@ type
     procedure SetupData;
     procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox);
     procedure SetupGrid;
-    { private declarations }
+    function GetTextWidth(ACanvas: TCanvas; AText: String): Integer;
   public
     { public declarations }
   end;
@@ -75,6 +81,7 @@ var
   style: TTextStyle;
   i: Integer;
 begin
+  aRect.Right := aRect.Right - 25;
   with style do
   begin
     Alignment := taLeftJustify;
@@ -106,8 +113,16 @@ begin
           Canvas.Line(
             aRect.Left ,aRect.Top + 2 + FRecordHeight * i,
             aRect.Right, aRect.Top + 2 + FRecordHeight * i);
-      end;
+
+      end
+    else
+      Canvas.FillRect(aRect);
   end;
+end;
+
+procedure TTimetableWindow.VerticalCBChange(Sender: TObject);
+begin
+  UpdateStatus;
 end;
 
 procedure TTimetableWindow.UpdateStatus;
@@ -187,19 +202,30 @@ begin
 end;
 
 procedure TTimetableWindow.SetupGrid;
+const
+  FixedRowHeight = 32;
+  FixedColWidth = 170;
+  StandartColWidth = 320;
 var i: Integer;
 begin
   SetupFixed(FRows, VerticalCB);
   SetupFixed(FCols, HorizontalCB);
   SetupData;
-  TimetableDG.RowCount := 1;
-  TimetableDG.ColCount := 1;
   TimetableDG.RowCount := Length(FRows) + 1;
   TimetableDG.ColCount := Length(FCols) + 1;
-  TimetableDG.RowHeights[0] := 32;
-  TimetableDG.ColWidths[0] := 170;
+  TimetableDG.RowHeights[0] := FixedRowHeight;
+  TimetableDG.ColWidths[0] := FixedColWidth;
   for i := 1 to TimetableDG.RowCount - 1 do
     TimetableDG.RowHeights[i] := FRecordHeight;
+  for i := 1 to TimetableDG.ColCount -1 do
+    TimetableDG.ColWidths[i] := StandartColWidth;
+  TimetableDG.Invalidate;
+end;
+
+function TTimetableWindow.GetTextWidth(ACanvas: TCanvas; AText: String
+  ): Integer;
+begin
+
 end;
 
 procedure TTimetableWindow.SetupData;
@@ -208,15 +234,23 @@ var
   fr, fc: array of Boolean;
 begin
   FQuery.Free;
-  FQuery := TTimetableQuery.Create(Metadata.TimetableTable, FFilters, FColList);
-  SQLQuery.Close;
-  SQLQuery.SQL.Text := FQuery.SelectQueryAsText(
-    VerticalCB.Items[VerticalCB.ItemIndex],
-    HorizontalCB.Items[HorizontalCB.ItemIndex]);
-  SQLQuery.Prepare;
-  for i := 0 to SQLQuery.Params.Count - 1 do
-    SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
-  SQLQuery.Open;
+  try
+    FQuery := TTimetableQuery.Create(Metadata.TimetableTable, FFilters, FColList);
+    SQLQuery.Close;
+    SQLQuery.SQL.Text := FQuery.SelectQueryAsText(
+      VerticalCB.Items[VerticalCB.ItemIndex],
+      HorizontalCB.Items[HorizontalCB.ItemIndex]);
+    SQLQuery.Prepare;
+    for i := 0 to SQLQuery.Params.Count - 1 do
+      SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
+    SQLQuery.Open;
+  except
+    on E: Exception do
+    begin
+      ShowMessage(E.Message);
+      exit;
+    end;
+  end;
   FRecordHeight := TimetableDG.Canvas.TextHeight('Hlg') *
     (SQLQuery.FieldCount - 1);
   SetLength(FData, 0, 0, 0);
@@ -254,16 +288,30 @@ begin
   begin;
     DeleteEmpty(fc, fr);
   end;
-end;
-
-procedure TTimetableWindow.FormShow(Sender: TObject);
-begin
-
+  SetLength(FShowAllButtons, 0, 0);
+  SetLength(FExpandTriangles, 0, 0);
+  SetLength(FShowAllButtons, Length(FRows), Length(FCols));
+  for i := 0 to High(FShowAllButtons) do
+    FShowAllButtons[i] := nil;
+  SetLength(FExpandTriangles, Length(FRows), Length(FCols));
+  for i := 0 to High(FExpandTriangles) do
+    FExpandTriangles[i] := nil;
 end;
 
 procedure TTimetableWindow.ApplyBtnClick(Sender: TObject);
 begin
+  ApplyBtn.Enabled := False;
   SetupGrid;
+end;
+
+procedure TTimetableWindow.DisplayedFieldsCLBClickCheck(Sender: TObject);
+begin
+  UpdateStatus;
+end;
+
+procedure TTimetableWindow.DisplayedNamesCLBClickCheck(Sender: TObject);
+begin
+  UpdateStatus;
 end;
 
 procedure TTimetableWindow.FormClose(Sender: TObject;
@@ -288,6 +336,16 @@ begin
   VerticalCB.ItemIndex := 0;
   HorizontalCB.ItemIndex := 1;
   SetupGrid;
+end;
+
+procedure TTimetableWindow.HideEmptyCBChange(Sender: TObject);
+begin
+  UpdateStatus;
+end;
+
+procedure TTimetableWindow.HorizontalCBChange(Sender: TObject);
+begin
+  UpdateStatus;
 end;
 
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);

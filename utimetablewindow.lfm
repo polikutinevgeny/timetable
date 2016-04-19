@@ -8,7 +8,6 @@ object TimetableWindow: TTimetableWindow
   ClientWidth = 1349
   OnClose = FormClose
   OnCreate = FormCreate
-  OnShow = FormShow
   LCLVersion = '1.6.0.4'
   object OptionsPanel: TPanel
     Left = 0
@@ -25,6 +24,7 @@ object TimetableWindow: TTimetableWindow
       Top = 8
       Width = 160
       ItemHeight = 25
+      OnChange = VerticalCBChange
       TabOrder = 0
     end
     object HorizontalCB: TComboBox
@@ -33,6 +33,7 @@ object TimetableWindow: TTimetableWindow
       Top = 8
       Width = 160
       ItemHeight = 25
+      OnChange = HorizontalCBChange
       TabOrder = 1
     end
     object HideEmptyCB: TCheckBox
@@ -41,6 +42,7 @@ object TimetableWindow: TTimetableWindow
       Top = 8
       Width = 212
       Caption = 'Hide Empty Rows/Cols'
+      OnChange = HideEmptyCBChange
       TabOrder = 2
     end
     object VerticalLbl: TLabel
@@ -300,6 +302,7 @@ object TimetableWindow: TTimetableWindow
           Height = 64
           Top = 80
           Width = 64
+          Enabled = False
           Flat = True
           Glyph.Data = {
             36240000424D3624000000000000360400002800000080000000400000000100
@@ -616,6 +619,7 @@ object TimetableWindow: TTimetableWindow
           Anchors = [akTop, akLeft, akBottom]
           BorderSpacing.Bottom = 8
           ItemHeight = 0
+          OnClickCheck = DisplayedFieldsCLBClickCheck
           TabOrder = 0
         end
         object FieldSelectionLbl: TLabel
@@ -636,6 +640,7 @@ object TimetableWindow: TTimetableWindow
           Anchors = [akTop, akLeft, akBottom]
           BorderSpacing.Bottom = 8
           ItemHeight = 0
+          OnClickCheck = DisplayedNamesCLBClickCheck
           TabOrder = 1
         end
         object NameSelelctionLbl: TLabel
