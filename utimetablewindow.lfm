@@ -85,10 +85,12 @@ object TimetableWindow: TTimetableWindow
         Align = alClient
         AutoAdvance = aaDown
         AutoEdit = False
+        ColCount = 1
         DefaultColWidth = 300
         DefaultRowHeight = 200
         ExtendedSelect = False
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goSmoothScroll, goFixedColSizing]
+        RowCount = 1
         TabAdvance = aaDown
         TabOrder = 0
         OnDrawCell = TimetableDGDrawCell

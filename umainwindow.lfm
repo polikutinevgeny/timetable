@@ -33,6 +33,10 @@ object MainWindow: TMainWindow
     object DirectoriesMI: TMenuItem
       Caption = 'Directories'
     end
+    object TimetableMI: TMenuItem
+      Caption = 'Timetable'
+      OnClick = TimetableMIClick
+    end
     object AboutMI: TMenuItem
       Caption = 'About'
       OnClick = AboutMIClick
