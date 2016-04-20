@@ -45,6 +45,7 @@ type
     FFilters: array of TFilter;
     FQuery: TDirectoryQuery;
     FSortedColumn: TColumn;
+    FHasHiddenFilters: Boolean;
     procedure UpdateStatus;
     procedure UpdateData;
     procedure RemoveFilter(Sender: TObject);
@@ -54,6 +55,7 @@ type
     procedure StartEdit;
   public
     CurrentTable: TTable;
+    procedure SetHiddenFilters(AFilters: array of TFilter);
   end;
 
 implementation
@@ -66,12 +68,14 @@ procedure TDirectoryForm.FormShow(Sender: TObject);
 begin
   RegisterDataUpdateListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
-  FQuery := TDirectoryQuery.Create(CurrentTable, nil,
-    TDirectoryQuery.GetFullColList(CurrentTable));
-  SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
-  SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
-  SQLQuery.Prepare;
-  SQLQuery.Open;
+  FHasHiddenFilters := Length(FFilters) > 0;
+  //FQuery := TDirectoryQuery.Create(CurrentTable, FFilters,
+  //  TDirectoryQuery.GetFullColList(CurrentTable));
+  //SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
+  //SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
+  //SQLQuery.Prepare;
+  //SQLQuery.Open;
+  ExecuteQuery;
   SetColWidth;
 end;
 
@@ -154,8 +158,9 @@ begin
       SQLQuery.SQL.Text := FQuery.SelectQueryAsText(s, SortDirection[t])
     else
       SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
+    SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
     SQLQuery.Prepare;
-    for i := 0 to SQLQuery.Params.Count - 1 do
+    for i := ifthen(FHasHiddenFilters, 0, 2) to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
     SQLQuery.Open;
   except
@@ -210,6 +215,13 @@ begin
   t.Setup(CurrentTable, id, cmEdit);
   RegisterCard(t);
   t.Show;
+end;
+
+procedure TDirectoryForm.SetHiddenFilters(AFilters: array of TFilter);
+begin
+  SetLength(FFilters, 2);
+  FFilters[0] := AFilters[0];
+  FFilters[1] := AFilters[1];
 end;
 
 procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);

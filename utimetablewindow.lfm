@@ -96,7 +96,7 @@ object TimetableWindow: TTimetableWindow
         TabAdvance = aaDown
         TabOrder = 0
         OnDrawCell = TimetableDGDrawCell
-        OnMouseDown = TimetableDGMouseDown
+        OnMouseUp = TimetableDGMouseUp
       end
     end
     object PairSplitterSide2: TPairSplitterSide

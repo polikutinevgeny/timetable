@@ -5,7 +5,7 @@ unit UQuery;
 interface
 
 uses
-  Classes, SysUtils, UMetadata, UFilters;
+  Classes, SysUtils, UMetadata, UFilters, Dialogs;
 
 type
 
@@ -103,9 +103,13 @@ begin
   Result := 'WHERE ';
   for i := 0 to High(FFilters) do
   begin
-    Result += Format('%s.%s %s %s ', [
-      FFilters[i].Column.Table.SQLName, FFilters[i].Column.SQLName,
-      FFilters[i].Action, ':p' + IntToStr(i)]);
+    if FFilters[i].Visible then
+      Result += Format('%s.%s %s %s ', [
+        FFilters[i].Column.Table.SQLName, FFilters[i].Column.SQLName,
+        FFilters[i].Action, ':p' + IntToStr(i)])
+    else
+      Result += Format('%s %s %s ', [FFilters[i].Column.SQLName,
+        FFilters[i].Action, ':p' + IntToStr(i)]);
     if i < High(FFilters) then
       Result += 'AND ';
   end;
@@ -304,7 +308,7 @@ begin
       FCols[i].DisplayName]);
   Result += Format('%s.%s AS "%s" ', [
       FCols[High(FCols)].Table.SQLName, FCols[High(FCols)].SQLName,
-      FCols[High(FCols)].DisplayName]);;
+      FCols[High(FCols)].DisplayName]);
 end;
 
 function TDirectoryQuery.SelectQueryAsText(ASortColumn: String;

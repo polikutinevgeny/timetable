@@ -30,6 +30,7 @@ type
       FRemoveBtn: TRemoveButton;
       FTable: TTable;
       FCols: TColArray;
+      FVisible: Boolean;
       function GetCol: TCol;
       function GetAction: String;
       function GetValue: String;
@@ -41,9 +42,11 @@ type
       procedure CreateRemoveBtn(AScrollbox: TScrollBox);
     public
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
-        ACols: TColArray);
+        ACols: TColArray; AVisible: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
+      procedure SetupHiddenFilter(AColumnCBIndex: Integer; AValueTEValue: String);
       function Copy(AScrollbox: TScrollBox): TFilter;
+      property Visible: Boolean read FVisible;
       property Column: TCol read GetCol;
       property Action: String read GetAction;
       property Value: String read GetValue;
@@ -99,7 +102,8 @@ end;
 
 procedure TFilter.FilterUpdate(Sender: TObject);
 begin
-  OnFilterUpdate;
+  if FVisible then
+    OnFilterUpdate;
 end;
 
 procedure TFilter.FilterRemove(Sender: TObject);
@@ -175,8 +179,9 @@ begin
 end;
 
 constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
-  ACols: TColArray);
+  ACols: TColArray; AVisible: Boolean);
 begin
+  FVisible := AVisible;
   CreateColumnCB(AScrollbox, ACols);
   CreateActionCB(AScrollbox);
   CreateValueTE(AScrollbox);
@@ -187,6 +192,8 @@ end;
 
 procedure TFilter.Draw(AScrollbox: TScrollBox);
 begin
+  if not FVisible then
+    exit;
   FColumnCB.Top := UpperPadding + AScrollbox.Tag * Interval;
   FColumnCB.Left := 20;
   FActionCB.Top := UpperPadding + AScrollbox.Tag * Interval;
@@ -200,6 +207,14 @@ begin
   FValueTE.Visible := True;
   FRemoveBtn.Visible := True;
   AScrollbox.Tag := AScrollbox.Tag + 1;
+end;
+
+procedure TFilter.SetupHiddenFilter(AColumnCBIndex: Integer;
+  AValueTEValue: String);
+begin
+  FActionCB.ItemIndex := FActionCB.Items.IndexOf('=');
+  FColumnCB.ItemIndex := AColumnCBIndex;
+  FValueTE.Text := AValueTEValue;
 end;
 
 function TFilter.Copy(AScrollbox: TScrollBox): TFilter;

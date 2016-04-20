@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Grids,
   LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, UQuery,
-  UMetadata, db, sqldb, UFilters, math;
+  UMetadata, db, sqldb, UFilters, math, UDirectoryWindow;
 
 type
 
@@ -44,10 +44,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure HideEmptyCBChange(Sender: TObject);
     procedure HorizontalCBChange(Sender: TObject);
-    procedure TimetableDGClick(Sender: TObject);
     procedure TimetableDGDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
-    procedure TimetableDGMouseDown(Sender: TObject; Button: TMouseButton;
+    procedure TimetableDGMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure VerticalCBChange(Sender: TObject);
   private
@@ -60,15 +59,14 @@ type
     FExpandTriangles: array of array of HRGN;
     FFilters: array of TFilter;
     FRecordHeight: Integer;
+    FOpenInNewWindowImage: TPortableNetworkGraphic;
     procedure DeleteEmpty(const fc: array of Boolean; const fr: array of Boolean);
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
     procedure SetupData;
     procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox);
     procedure SetupGrid;
-    function GetTextWidth(ACanvas: TCanvas; AText: String): Integer;
   public
-    { public declarations }
   end;
 
 var
@@ -93,6 +91,7 @@ begin
   aRect.Right := aRect.Right - RightMargin;
   DeleteObject(FExpandTriangles[aRow][aCol]);
   FExpandTriangles[aRow][aCol] := NullRegion;
+  FShowAllButtons[aRow][aCol] := NullRegion;
   with style do
   begin
     Alignment := taLeftJustify;
@@ -133,18 +132,21 @@ begin
         if i <> 0 then
           Canvas.Line(
             aRect.Left ,aRect.Top + BorderMargin + FRecordHeight * i,
-            aRect.Right + RightMargin, aRect.Top + 2 + FRecordHeight * i);
+            aRect.Right + RightMargin, aRect.Top + BorderMargin + FRecordHeight * i);
       end;
-      Canvas.Rectangle(aRect.Right, aRect.Top, aRect.Right + 25, aRect.Top + 25);
+      Canvas.Draw(aRect.Right, aRect.Top, FOpenInNewWindowImage);
+      FShowAllButtons[aRow][aCol] := CreateRectRgn(aRect.Right, aRect.Top,
+        aRect.Right + RightMargin, aRect.Top + RightMargin);
       if (w > ColWidths[aCol] - RightMargin) or (Length(FData[aRow - 1][aCol - 1]) *
         FRecordHeight > RowHeights[aRow]) then
       begin
         Canvas.Brush.Color := clBlack;
-        Canvas.Polygon([Point(aRect.Right + 25, aRect.Bottom),
-          Point(aRect.Right, aRect.Bottom), Point(aRect.Right + 25, aRect.Bottom - 25)]);
-        trpts[0] := Point(aRect.Right + 25, aRect.Bottom);
+        Canvas.Polygon([Point(aRect.Right + RightMargin, aRect.Bottom),
+          Point(aRect.Right, aRect.Bottom), Point(aRect.Right + RightMargin,
+          aRect.Bottom - RightMargin)]);
+        trpts[0] := Point(aRect.Right + RightMargin, aRect.Bottom);
         trpts[1] := Point(aRect.Right, aRect.Bottom);
-        trpts[2] := Point(aRect.Right + 25, aRect.Bottom - 25);
+        trpts[2] := Point(aRect.Right + RightMargin, aRect.Bottom - RightMargin);
         FExpandTriangles[aRow][aCol] := CreatePolygonRgn(trpts, 3, 1);
       end;
     end
@@ -153,9 +155,12 @@ begin
   end;
 end;
 
-procedure TTimetableWindow.TimetableDGMouseDown(Sender: TObject;
+procedure TTimetableWindow.TimetableDGMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var col, row, i, j, w: Integer;
+var
+  col, row, i, j, w: Integer;
+  df: TDirectoryForm;
+  rf, cf: TFilter;
 begin
   TimetableDG.MouseToCell(X, Y, col, row);
   if PtInRegion(FExpandTriangles[row][col], X, Y) then
@@ -168,6 +173,17 @@ begin
       end;
     TimetableDG.ColWidths[col] := w;
     TimetableDG.RowHeights[row] := Length(FData[row - 1][col - 1]) * FRecordHeight;
+  end
+  else if PtInRegion(FShowAllButtons[row][col], X, Y) then
+  begin
+    cf := TFilter.Create(nil, Metadata.TimetableTable, FColList, False);
+    cf.SetupHiddenFilter(VerticalCB.ItemIndex, FRows[row - 1]);
+    rf := TFilter.Create(nil, Metadata.TimetableTable, FColList, False);
+    rf.SetupHiddenFilter(HorizontalCB.ItemIndex, FCols[col - 1]);
+    df := TDirectoryForm.Create(Application);
+    df.CurrentTable := Metadata.TimetableTable;
+    df.SetHiddenFilters([rf, cf]);
+    df.Show;
   end;
 end;
 
@@ -273,12 +289,6 @@ begin
   TimetableDG.Invalidate;
 end;
 
-function TTimetableWindow.GetTextWidth(ACanvas: TCanvas; AText: String
-  ): Integer;
-begin
-
-end;
-
 procedure TTimetableWindow.SetupData;
 var
   i, j, k: Integer;
@@ -371,6 +381,8 @@ end;
 procedure TTimetableWindow.FormCreate(Sender: TObject);
 var i: Integer;
 begin
+  FOpenInNewWindowImage := TPortableNetworkGraphic.Create;
+  FOpenInNewWindowImage.LoadFromFile('icons/NewWindow.png');
   FColList := TTimetableQuery.GetFullColList(Metadata.TimetableTable);
   for i := 0 to High(FColList) do
   begin
@@ -394,11 +406,6 @@ end;
 procedure TTimetableWindow.HorizontalCBChange(Sender: TObject);
 begin
   UpdateStatus;
-end;
-
-procedure TTimetableWindow.TimetableDGClick(Sender: TObject);
-begin
-
 end;
 
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
