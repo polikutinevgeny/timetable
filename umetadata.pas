@@ -35,6 +35,7 @@ type
       Cols: TColArray;
       ForeignKeys: TColArray;
       PrimaryKey: TCol;
+      SortKey: TCol;
       SQLName: String;
       DisplayName: String;
       GeneratorName: String;
@@ -52,7 +53,7 @@ type
       TimetableTable: TTable;
       procedure RegisterTable(
         ASQLName, ADisplayName: String; ACols: array of TCol;
-        AGenerator: String; IsTimeTable: Boolean = False);
+        AGenerator: String; IsTimeTable: Boolean = False; SortBy: String = '');
       function GetReference(ATableName: String): TCol;
   end;
 
@@ -64,7 +65,8 @@ implementation
 { TMetadata }
 
 procedure TMetadata.RegisterTable(ASQLName, ADisplayName: String;
-  ACols: array of TCol; AGenerator: String; IsTimeTable: Boolean);
+  ACols: array of TCol; AGenerator: String; IsTimeTable: Boolean; SortBy: String
+  );
 var
   i: Integer;
   nt: TTable;
@@ -72,6 +74,12 @@ begin
   nt := TTable.Create(ASQLName, ADisplayName);
   for i := 0 to High(ACols) do
   begin
+    if ACols[i].SQLName = SortBy then
+    begin
+      nt.SortKey := ACols[i];
+      nt.SortKey.Table := nt;
+      Continue;
+    end;
     nt.AddCol(ACols[i]);
     ACols[i].Table := nt;
   end;
@@ -154,10 +162,14 @@ initialization
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
     TCol.Create('id', 'Lesson time ID', 130, True),
     TCol.Create('begin_', 'Starts at', 100),
-    TCol.Create('end_', 'Ends at', 100)], 'LessonsTimesIdGenerator');
+    TCol.Create('end_', 'Ends at', 100),
+    TCol.Create('number', 'Lesson number', 10)],
+    'LessonsTimesIdGenerator', False, 'number');
   Metadata.RegisterTable('Weekdays', 'Weekdays', [
     TCol.Create('id', 'Weekday ID', 100, True),
-    TCol.Create('name', 'Weekday', 120)], 'WeekdaysIdGenerator');
+    TCol.Create('name', 'Weekday', 120),
+    TCol.Create('number', 'Weekday number', 10)],
+    'WeekdaysIdGenerator', False, 'number');
   Metadata.RegisterTable('Lessons_Types', 'Lesson types', [
     TCol.Create('id', 'Lesson type ID', 130, True),
     TCol.Create('name', 'Type', 200)], 'LessonsTypesIdGenerator');

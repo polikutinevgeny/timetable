@@ -61,7 +61,7 @@ type
     FRecordHeight: Integer;
     FOpenInNewWindowImage: TPortableNetworkGraphic;
     FTextStyle: TTextStyle;
-    procedure AssignData(fc: TBooleanArray; fr: TBooleanArray);
+    procedure AssignData(var fc: TBooleanArray; var fr: TBooleanArray);
     procedure DeleteEmpty(const fc: TBooleanArray; const fr: TBooleanArray);
     procedure DrawNewWindowBtn(aRect: TRect; aRow: Integer; aCol: Integer);
     procedure DrawTriangle(aRect: TRect; aRow: Integer; aCol: Integer);
@@ -129,8 +129,9 @@ begin
             aRect.Top + BorderMargin + FRecordHeight * i);
       end;
       DrawNewWindowBtn(aRect, aRow, aCol);
-      if (w > ColWidths[aCol] - RightMargin) or
-        (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow])
+      if (w > ColWidths[aCol] - RightMargin - BorderMargin) or
+        (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight >
+        RowHeights[aRow] - BorderMargin)
       then
         DrawTriangle(aRect, aRow, aCol);
     end
@@ -149,11 +150,12 @@ begin
     w := 0;
     for i := 0 to High(FData[row - 1][col - 1]) do
       for j := 0 to High(FData[row - 1][col - 1][i]) do
-        w := max(w, Canvas.TextWidth(FData[row - 1][col - 1][i][j]) + 25);
+        w := Max(w, Canvas.TextWidth(FData[row - 1][col - 1][i][j]) +
+          RightMargin + BorderMargin);
     TimetableDG.ColWidths[col] := Max(w, TimetableDG.ColWidths[col]);
     TimetableDG.RowHeights[row] := Max(
       Length(FData[row - 1][col - 1]) *
-      FRecordHeight, TimetableDG.RowHeights[row]);
+      FRecordHeight + BorderMargin, TimetableDG.RowHeights[row]);
   end
   else if PtInRegion(FShowAllButtons[row][col], X, Y) then
   begin
@@ -212,11 +214,12 @@ begin
     SetLength(FData, Length(FData), Length(FData[0]) - k);
 end;
 
-procedure TTimetableWindow.AssignData(fc: TBooleanArray; fr: TBooleanArray);
-var i, j, k: Integer;
+procedure TTimetableWindow.AssignData(var fc: TBooleanArray; var fr: TBooleanArray);
+var
+  hset: Boolean;
+  i, j, k, c: Integer;
 begin
-  FRecordHeight := TimetableDG.Canvas.TextHeight('Hlg') *
-    (SQLQuery.FieldCount - 1);
+  hset := False;
   SetLength(FData, 0, 0, 0);
   SetLength(FData, Length(FRows), Length(FCols));
   SetLength(fr, Length(FRows));
@@ -236,16 +239,25 @@ begin
         fr[i] := True;
         fc[j] := True;
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
-        SetLength(FData[i][j][High(FData[i][j])], SQLQuery.FieldCount - 1);
+        c := 0;
         for k := 1 to SQLQuery.FieldCount - 1 do
           if DisplayedFieldsCLB.Checked[k - 1] then
           begin
-            FData[i][j][High(FData[i][j])][k - 1] := '';
+            c += 1;
+            SetLength(FData[i][j][High(FData[i][j])],
+              Length(FData[i][j][High(FData[i][j])]) + 1);
+            FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] := '';
             if DisplayedNamesCLB.Checked[k - 1] then
-              FData[i][j][High(FData[i][j])][k - 1] +=
+              FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
                 SQLQuery.Fields[k].DisplayName + ': ';
-            FData[i][j][High(FData[i][j])][k - 1] += SQLQuery.Fields[k].AsString;
+            FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
+              SQLQuery.Fields[k].AsString;
           end;
+        if not hset then
+        begin
+          FRecordHeight := TimetableDG.Canvas.TextHeight('Hlg') * c;
+          hset := True;
+        end;
         SQLQuery.Next;
       end;
 end;
@@ -301,7 +313,7 @@ begin
   SQLQuery.Close;
   SQLQuery.SQL.Text :=
     TTimetableQuery.GetValuesListQuery(Metadata.TimetableTable,
-    ACombobox.Items[ACombobox.ItemIndex]);
+    ACombobox.Items.Objects[ACombobox.ItemIndex] as TCol);
   SQLQuery.Open;
   SetLength(ANames, 0);
   while not SQLQuery.EOF do
@@ -341,8 +353,8 @@ begin
     FQuery := TTimetableQuery.Create(Metadata.TimetableTable, FFilters, FColList);
     SQLQuery.Close;
     SQLQuery.SQL.Text := FQuery.SelectQueryAsText(
-      VerticalCB.Items[VerticalCB.ItemIndex],
-      HorizontalCB.Items[HorizontalCB.ItemIndex]);
+      VerticalCB.Items.Objects[VerticalCB.ItemIndex] as TCol,
+      HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol);
     SQLQuery.Prepare;
     for i := 0 to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;

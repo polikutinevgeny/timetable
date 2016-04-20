@@ -49,10 +49,9 @@ type
     private
       function GetSelectAsText: String;
     public
-      function SelectQueryAsText(AVertColumn: String;
-        AHorizColumn: String): String;
+      function SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
       class function GetFullColList(ATable: TTable): TColArray;
-      class function GetValuesListQuery(ATable: TTable; AName: String): String;
+      class function GetValuesListQuery(ATable: TTable; ACol: TCol): String;
   end;
 
   { TCardQuery }
@@ -168,11 +167,21 @@ begin
     FCols[High(FCols)].DisplayName]);
 end;
 
-function TTimetableQuery.SelectQueryAsText(AVertColumn: String;
-  AHorizColumn: String): String;
+function TTimetableQuery.SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol
+  ): String;
 begin
-  Result := Format('%s %s %s ORDER BY "%s", "%s"', [
-    GetSelectAsText, GetFromAsText, GetFiltersAsText, AVertColumn, AHorizColumn]);
+  Result := Format('%s %s %s ORDER BY ', [
+    GetSelectAsText, GetFromAsText, GetFiltersAsText]);
+  if AVertColumn.Table.SortKey <> nil then
+    Result += AVertColumn.Table.SortKey.Table.SQLName + '.' +
+      AVertColumn.Table.SortKey.SQLName + ', '
+  else
+    Result += '"' + AVertColumn.DisplayName + '", ';
+  if AHorizColumn.Table.SortKey <> nil then
+    Result += AHorizColumn.Table.SortKey.Table.SQLName + '.' +
+      AHorizColumn.Table.SortKey.SQLName
+  else
+    Result += '"' + AHorizColumn.DisplayName + '"';
 end;
 
 class function TTimetableQuery.GetFullColList(ATable: TTable): TColArray;
@@ -199,24 +208,20 @@ begin
         Reference.Table.Cols[High(Reference.Table.Cols)].SQLName]);
       w += Reference.Table.Cols[High(Reference.Table.Cols)].Width;
       Result[i] := TCol.Create(s, DisplayName, w, False, False);
+      Result[i].Table := Reference.Table;
     end;
 end;
 
-class function TTimetableQuery.GetValuesListQuery(ATable: TTable; AName: String
+class function TTimetableQuery.GetValuesListQuery(ATable: TTable; ACol: TCol
   ): String;
-var
-  i: Integer;
-  c: TCol;
 begin
-  for i := 0 to High(ATable.ForeignKeys) do
-    if ATable.ForeignKeys[i].DisplayName = AName then
-      c := ATable.ForeignKeys[i];
-  Result := 'SELECT ' + c.Reference.Table.PrimaryKey.SQLName + ', ';
-  for i := 0 to High(c.Reference.Table.Cols) - 1 do
-    Result += c.Reference.Table.Cols[i].SQLName + ' || '' '' || ';
-  Result += c.Reference.Table.Cols[High(c.Reference.Table.Cols)].SQLName;
-  Result += ' AS Data FROM ' + c.Reference.Table.SQLName;
-  Result += ' ORDER BY Data'
+  Result := 'SELECT ' + ACol.SQLName;
+  Result += ' AS Data FROM ' + ACol.Table.SQLName;
+  Result += ' ORDER BY ';
+  if ACol.Table.SortKey <> nil then
+    Result += ACol.Table.SQLName + '.' + ACol.Table.SortKey.SQLName
+  else
+    Result += 'Data';
 end;
 
 { TCardQuery }
