@@ -5,7 +5,7 @@ unit UMainWindow;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, UTimetableWindow,
+  Forms, UTimetableWindow,
   Dialogs, Menus, StdCtrls, UDirectoryWindow, UMetadata;
 
 type
@@ -54,8 +54,7 @@ end;
 procedure TMainWindow.DirectoryMIClick(Sender: TObject);
 var f: TDirectoryForm;
 begin
-  f := TDirectoryForm.Create(Application);
-  f.CurrentTable := Metadata.Tables[(Sender as TMenuItem).Tag];
+  f := TDirectoryForm.Create(Application, Metadata.Tables[(Sender as TMenuItem).Tag]);
   f.Show;
 end;
 

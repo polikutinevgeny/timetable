@@ -5,9 +5,9 @@ unit UTimetableWindow;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Grids,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids,
   LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, UQuery,
-  UMetadata, db, sqldb, UFilters, math, UDirectoryWindow;
+  UMetadata, sqldb, UFilters, math, UDirectoryWindow;
 
 type
 
@@ -89,23 +89,22 @@ const
 
 procedure TTimetableWindow.TimetableDGDrawCell(Sender: TObject; aCol,
   aRow: Integer; aRect: TRect; aState: TGridDrawState);
-var
-  i, j, w: Integer;
+var i, j, w: Integer;
 begin
+  Canvas.FillRect(aRect);
   aRect.Right := aRect.Right - RightMargin;
   DeleteObject(FExpandTriangles[aRow][aCol]);
   FExpandTriangles[aRow][aCol] := NullRegion;
   FShowAllButtons[aRow][aCol] := NullRegion;
   with TimetableDG do
-  begin
     if (aCol <> 0) and (aRow = 0) then
-      Canvas.TextRect(aRect, aRect.Left + BorderMargin,
-        aRect.Top + BorderMargin, FCols[aCol - 1], FTextStyle)
+      Canvas.TextRect(aRect, aRect.Left + BorderMargin, aRect.Top + BorderMargin,
+        FCols[aCol - 1], FTextStyle)
     else if (aCol = 0) and (aRow <> 0) then
     begin
       FTextStyle.Wordbreak := True;
-      Canvas.TextRect(aRect, aRect.Left + BorderMargin,
-        aRect.Top + BorderMargin, FRows[aRow - 1], FTextStyle);
+      Canvas.TextRect(aRect, aRect.Left + BorderMargin, aRect.Top + BorderMargin,
+        FRows[aRow - 1], FTextStyle);
       FTextStyle.Wordbreak := False;
     end
     else if (aCol <> 0) and (aRow <> 0) and
@@ -118,24 +117,23 @@ begin
         begin
           Canvas.TextRect(aRect, aRect.Left + BorderMargin,
             aRect.Top + BorderMargin + FRecordHeight * i +
-            Canvas.TextHeight('Hlg') * j,
-            FData[aRow - 1][aCol - 1][i][j], FTextStyle);
+            Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
+            FTextStyle);
           w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
         end;
         Canvas.Pen.Color := clBlack;
         if i <> 0 then
           Canvas.Line(
             aRect.Left ,aRect.Top + BorderMargin + FRecordHeight * i,
-            aRect.Right + RightMargin, aRect.Top + BorderMargin + FRecordHeight * i);
+            aRect.Right + RightMargin,
+            aRect.Top + BorderMargin + FRecordHeight * i);
       end;
       DrawNewWindowBtn(aRect, aRow, aCol);
-      if (w > ColWidths[aCol] - RightMargin) or (Length(FData[aRow - 1][aCol - 1]) *
-        FRecordHeight > RowHeights[aRow]) then
+      if (w > ColWidths[aCol] - RightMargin) or
+        (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow])
+      then
         DrawTriangle(aRect, aRow, aCol);
     end
-    else
-      Canvas.FillRect(aRect);
-  end;
 end;
 
 procedure TTimetableWindow.TimetableDGMouseUp(Sender: TObject;
@@ -151,12 +149,11 @@ begin
     w := 0;
     for i := 0 to High(FData[row - 1][col - 1]) do
       for j := 0 to High(FData[row - 1][col - 1][i]) do
-      begin;
         w := max(w, Canvas.TextWidth(FData[row - 1][col - 1][i][j]) + 25);
-      end;
     TimetableDG.ColWidths[col] := Max(w, TimetableDG.ColWidths[col]);
     TimetableDG.RowHeights[row] := Max(
-      Length(FData[row - 1][col - 1]) * FRecordHeight, TimetableDG.RowHeights[row]);
+      Length(FData[row - 1][col - 1]) *
+      FRecordHeight, TimetableDG.RowHeights[row]);
   end
   else if PtInRegion(FShowAllButtons[row][col], X, Y) then
   begin
@@ -164,8 +161,7 @@ begin
     cf.SetupHiddenFilter(VerticalCB.ItemIndex, FRows[row - 1]);
     rf := TFilter.Create(nil, Metadata.TimetableTable, FColList, False);
     rf.SetupHiddenFilter(HorizontalCB.ItemIndex, FCols[col - 1]);
-    df := TDirectoryForm.Create(Application);
-    df.CurrentTable := Metadata.TimetableTable;
+    df := TDirectoryForm.Create(Application, Metadata.TimetableTable);
     df.SetHiddenFilters([rf, cf]);
     df.Show;
   end;
@@ -233,9 +229,9 @@ begin
     for j := 0 to High(FCols) do
       while (not SQLQuery.EOF) and
         (FRows[i] = SQLQuery.FieldByName(VerticalCB.Items[
-          VerticalCB.ItemIndex]).AsString) and
+        VerticalCB.ItemIndex]).AsString) and
         (FCols[j] = SQLQuery.FieldByName(HorizontalCB.Items[
-          HorizontalCB.ItemIndex]).AsString) do
+        HorizontalCB.ItemIndex]).AsString) do
       begin
         fr[i] := True;
         fc[j] := True;
@@ -248,8 +244,7 @@ begin
             if DisplayedNamesCLB.Checked[k - 1] then
               FData[i][j][High(FData[i][j])][k - 1] +=
                 SQLQuery.Fields[k].DisplayName + ': ';
-            FData[i][j][High(FData[i][j])][k - 1] += SQLQuery.Fields[k].AsString +
-              #10#13;
+            FData[i][j][High(FData[i][j])][k - 1] += SQLQuery.Fields[k].AsString;
           end;
         SQLQuery.Next;
       end;
@@ -265,8 +260,7 @@ end;
 
 procedure TTimetableWindow.DrawTriangle(aRect: TRect; aRow: Integer;
   aCol: Integer);
-var
-  trpts: array[0 .. 2] of TPoint;
+var trpts: array[0 .. 2] of TPoint;
 begin
   with TimetableDG do
   begin
@@ -334,7 +328,7 @@ begin
   TimetableDG.ColWidths[0] := FixedColWidth;
   for i := 1 to TimetableDG.RowCount - 1 do
     TimetableDG.RowHeights[i] := FRecordHeight;
-  for i := 1 to TimetableDG.ColCount -1 do
+  for i := 1 to TimetableDG.ColCount - 1 do
     TimetableDG.ColWidths[i] := StandartColWidth;
   TimetableDG.Invalidate;
 end;
@@ -441,7 +435,8 @@ begin
   ApplyBtn.Enabled := True;
   SetLength(FFilters, Length(FFilters) + 1);
   FFilters[High(FFilters)] := TFilter.Create(
-    FilterSB, Metadata.TimetableTable, TDirectoryQuery.GetFullColList(Metadata.TimetableTable));
+    FilterSB, Metadata.TimetableTable,
+    TDirectoryQuery.GetFullColList(Metadata.TimetableTable));
   FFilters[High(FFilters)].OnFilterUpdate := @UpdateStatus;
   FFilters[High(FFilters)].OnFilterRemove := @RemoveFilter;
 end;

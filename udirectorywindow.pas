@@ -5,9 +5,9 @@ unit UDirectoryWindow;
 interface
 
 uses
-  Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
+  Classes, SysUtils, sqldb, db, Forms, Controls, Dialogs,
   DBGrids, ExtCtrls, PairSplitter, UMetadata, math, UCardWindow, UDB,
-  UQuery, UFilters, Grids, Buttons, DbCtrls, ComCtrls, UNotification;
+  UQuery, UFilters, Buttons, ComCtrls, UNotification;
 
 type
 
@@ -55,6 +55,7 @@ type
     procedure StartEdit;
   public
     CurrentTable: TTable;
+    constructor Create(TheOwner: TComponent; ATable: TTable);
     procedure SetHiddenFilters(AFilters: array of TFilter);
   end;
 
@@ -69,12 +70,6 @@ begin
   RegisterDataUpdateListener(@UpdateData);
   Caption := CurrentTable.DisplayName;
   FHasHiddenFilters := Length(FFilters) > 0;
-  //FQuery := TDirectoryQuery.Create(CurrentTable, FFilters,
-  //  TDirectoryQuery.GetFullColList(CurrentTable));
-  //SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
-  //SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
-  //SQLQuery.Prepare;
-  //SQLQuery.Open;
   ExecuteQuery;
   SetColWidth;
 end;
@@ -215,6 +210,12 @@ begin
   t.Setup(CurrentTable, id, cmEdit);
   RegisterCard(t);
   t.Show;
+end;
+
+constructor TDirectoryForm.Create(TheOwner: TComponent; ATable: TTable);
+begin
+  inherited Create(TheOwner);
+  CurrentTable := ATable;
 end;
 
 procedure TDirectoryForm.SetHiddenFilters(AFilters: array of TFilter);
