@@ -155,7 +155,7 @@ begin
       SQLQuery.SQL.Text := FQuery.SelectQueryAsText;
     SQLQuery.DeleteSQL.Text := FQuery.DeleteQueryAsText;
     SQLQuery.Prepare;
-    for i := ifthen(FHasHiddenFilters, 0, 2) to SQLQuery.Params.Count - 1 do
+    for i := 0 to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
     SQLQuery.Open;
   except
