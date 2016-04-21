@@ -47,11 +47,11 @@ type
 
   TTimetableQuery = class(TBaseViewingQuery)
     private
-      function GetSelectAsText: String;
+      function GetSelectAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
     public
       function SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
       class function GetFullColList(ATable: TTable): TColArray;
-      class function GetValuesListQuery(ATable: TTable; ACol: TCol): String;
+      class function GetValuesListQuery(ACol: TCol): String;
   end;
 
   { TCardQuery }
@@ -102,13 +102,9 @@ begin
   Result := 'WHERE ';
   for i := 0 to High(FFilters) do
   begin
-    if FFilters[i].Visible then
-      Result += Format('%s.%s %s %s ', [
-        FFilters[i].Column.Table.SQLName, FFilters[i].Column.SQLName,
-        FFilters[i].Action, ':p' + IntToStr(i)])
-    else
-      Result += Format('%s %s %s ', [FFilters[i].Column.SQLName,
-        FFilters[i].Action, ':p' + IntToStr(i)]);
+    Result += Format('%s.%s %s %s ', [
+      FFilters[i].Column.Table.SQLName, FFilters[i].Column.SQLName,
+      FFilters[i].Action, ':p' + IntToStr(i)]);
     if i < High(FFilters) then
       Result += 'AND ';
   end;
@@ -149,12 +145,16 @@ end;
 
 { TTimetableQuery }
 
-function TTimetableQuery.GetSelectAsText: String;
+function TTimetableQuery.GetSelectAsText(AVertColumn: TCol; AHorizColumn: TCol
+  ): String;
 var i: Integer;
 begin
-  Result := Format('SELECT %s.%s AS "%s",', [
+  Result := Format('SELECT %s.%s AS "%s", ', [
     FTables[0].SQLName, FTables[0].PrimaryKey.SQLName,
     FTables[0].PrimaryKey.DisplayName]);
+  Result += Format('%s.%s AS VerticalID, %s.%s AS HorizontalID, ', [
+    AVertColumn.Table.SQLName, AVertColumn.Table.PrimaryKey.SQLName,
+    AHorizColumn.Table.SQLName, AHorizColumn.Table.PrimaryKey.SQLName]);
   for i := 0 to High(FCols) - 1 do
   begin
     if FCols[i].Real then
@@ -171,7 +171,7 @@ function TTimetableQuery.SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol
   ): String;
 begin
   Result := Format('%s %s %s ORDER BY ', [
-    GetSelectAsText, GetFromAsText, GetFiltersAsText]);
+    GetSelectAsText(AVertColumn, AHorizColumn), GetFromAsText, GetFiltersAsText]);
   if AVertColumn.Table.SortKey <> nil then
     Result += AVertColumn.Table.SortKey.Table.SQLName + '.' +
       AVertColumn.Table.SortKey.SQLName + ', '
@@ -212,12 +212,11 @@ begin
     end;
 end;
 
-class function TTimetableQuery.GetValuesListQuery(ATable: TTable; ACol: TCol
-  ): String;
+class function TTimetableQuery.GetValuesListQuery(ACol: TCol): String;
 begin
-  Result := 'SELECT ' + ACol.SQLName;
-  Result += ' AS Data FROM ' + ACol.Table.SQLName;
-  Result += ' ORDER BY ';
+  Result := Format('SELECT %s.%s AS ID, %s AS Data FROM %s ORDER BY ', [
+    ACol.Table.SQLName, ACol.Table.PrimaryKey.SQLName, ACol.SQLName,
+    ACol.Table.SQLName]);
   if ACol.Table.SortKey <> nil then
     Result += ACol.Table.SQLName + '.' + ACol.Table.SortKey.SQLName
   else

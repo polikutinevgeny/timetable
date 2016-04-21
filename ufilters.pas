@@ -36,15 +36,15 @@ type
       function GetValue: String;
       procedure FilterUpdate(Sender: TObject);
       procedure FilterRemove(Sender: TObject);
-      procedure CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
+      procedure CreateColumnCB(AScrollbox: TScrollBox; ACols: array of TCol);
       procedure CreateActionCB(AScrollbox: TScrollBox);
       procedure CreateValueTE(AScrollbox: TScrollBox);
       procedure CreateRemoveBtn(AScrollbox: TScrollBox);
     public
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
-        ACols: TColArray; AVisible: Boolean = True);
+        ACols: array of TCol; AVisible: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
-      procedure SetupHiddenFilter(AColumnCBIndex: Integer; AValueTEValue: String);
+      procedure SetupHiddenFilter(AValueTEValue: String);
       function Copy(AScrollbox: TScrollBox): TFilter;
       property Visible: Boolean read FVisible;
       property Column: TCol read GetCol;
@@ -114,7 +114,7 @@ begin
   Free;
 end;
 
-procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: TColArray);
+procedure TFilter.CreateColumnCB(AScrollbox: TScrollBox; ACols: array of TCol);
 var i: Integer;
 begin
   FColumnCB := TComboBox.Create(AScrollbox);
@@ -179,7 +179,7 @@ begin
 end;
 
 constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
-  ACols: TColArray; AVisible: Boolean);
+  ACols: array of TCol; AVisible: Boolean);
 begin
   FVisible := AVisible;
   CreateColumnCB(AScrollbox, ACols);
@@ -209,11 +209,10 @@ begin
   AScrollbox.Tag := AScrollbox.Tag + 1;
 end;
 
-procedure TFilter.SetupHiddenFilter(AColumnCBIndex: Integer;
-  AValueTEValue: String);
+procedure TFilter.SetupHiddenFilter(AValueTEValue: String);
 begin
   FActionCB.ItemIndex := FActionCB.Items.IndexOf('=');
-  FColumnCB.ItemIndex := AColumnCBIndex;
+  FColumnCB.ItemIndex := 0;
   FValueTE.Text := AValueTEValue;
 end;
 

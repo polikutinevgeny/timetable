@@ -54,6 +54,8 @@ type
     FColList: TColArray;
     FCols: TStringArray;
     FRows: TStringArray;
+    FColIDs: TStringArray;
+    FRowIDs: TStringArray;
     FData: array of array of array of array of String;
     FShowAllButtons: array of array of HRGN;
     FExpandTriangles: array of array of HRGN;
@@ -68,7 +70,8 @@ type
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
     procedure SetupData;
-    procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox);
+    procedure SetupFixed(var ANames: TStringArray; ACombobox: TComboBox;
+      var AIDs: TStringArray);
     procedure SetupGrid;
     procedure SelectData;
   public
@@ -159,10 +162,14 @@ begin
   end
   else if PtInRegion(FShowAllButtons[row][col], X, Y) then
   begin
-    cf := TFilter.Create(nil, Metadata.TimetableTable, FColList, False);
-    cf.SetupHiddenFilter(VerticalCB.ItemIndex, FRows[row - 1]);
-    rf := TFilter.Create(nil, Metadata.TimetableTable, FColList, False);
-    rf.SetupHiddenFilter(HorizontalCB.ItemIndex, FCols[col - 1]);
+    cf := TFilter.Create(nil, Metadata.TimetableTable, [
+      (VerticalCB.Items.Objects[VerticalCB.ItemIndex] as TCol).Table.PrimaryKey],
+      False);
+    cf.SetupHiddenFilter(FRowIDs[row - 1]);
+    rf := TFilter.Create(nil, Metadata.TimetableTable, [
+      (HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol).Table.PrimaryKey],
+      False);
+    rf.SetupHiddenFilter(FColIDs[col - 1]);
     df := TDirectoryForm.Create(Application, Metadata.TimetableTable);
     df.SetHiddenFilters([rf, cf]);
     df.Show;
@@ -231,23 +238,21 @@ begin
   for i := 0 to High(FRows) do
     for j := 0 to High(FCols) do
       while (not SQLQuery.EOF) and
-        (FRows[i] = SQLQuery.FieldByName(VerticalCB.Items[
-        VerticalCB.ItemIndex]).AsString) and
-        (FCols[j] = SQLQuery.FieldByName(HorizontalCB.Items[
-        HorizontalCB.ItemIndex]).AsString) do
+        (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
+        (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
       begin
         fr[i] := True;
         fc[j] := True;
         SetLength(FData[i][j], Length(FData[i][j]) + 1);
         c := 0;
-        for k := 1 to SQLQuery.FieldCount - 1 do
-          if DisplayedFieldsCLB.Checked[k - 1] then
+        for k := 3 to SQLQuery.FieldCount - 1 do
+          if DisplayedFieldsCLB.Checked[k - 3] then
           begin
             c += 1;
             SetLength(FData[i][j][High(FData[i][j])],
               Length(FData[i][j][High(FData[i][j])]) + 1);
             FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] := '';
-            if DisplayedNamesCLB.Checked[k - 1] then
+            if DisplayedNamesCLB.Checked[k - 3] then
               FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
                 SQLQuery.Fields[k].DisplayName + ': ';
             FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
@@ -308,18 +313,21 @@ begin
 end;
 
 procedure TTimetableWindow.SetupFixed(var ANames: TStringArray;
-  ACombobox: TComboBox);
+  ACombobox: TComboBox; var AIDs: TStringArray);
 begin
   SQLQuery.Close;
   SQLQuery.SQL.Text :=
-    TTimetableQuery.GetValuesListQuery(Metadata.TimetableTable,
+    TTimetableQuery.GetValuesListQuery(
     ACombobox.Items.Objects[ACombobox.ItemIndex] as TCol);
   SQLQuery.Open;
   SetLength(ANames, 0);
+  SetLength(AIDs, 0);
   while not SQLQuery.EOF do
   begin
     SetLength(ANames, Length(ANames) + 1);
+    SetLength(AIDs, Length(AIDs) + 1);
     ANames[High(ANames)] := SQLQuery.FieldByName('Data').AsString;
+    AIDs[High(AIDs)] := SQLQuery.FieldByName('ID').AsString;
     SQLQuery.Next;
   end;
 end;
@@ -331,8 +339,8 @@ const
   StandartColWidth = 320;
 var i: Integer;
 begin
-  SetupFixed(FRows, VerticalCB);
-  SetupFixed(FCols, HorizontalCB);
+  SetupFixed(FRows, VerticalCB, FRowIDs);
+  SetupFixed(FCols, HorizontalCB, FColIDs);
   SetupData;
   TimetableDG.RowCount := Length(FRows) + 1;
   TimetableDG.ColCount := Length(FCols) + 1;
