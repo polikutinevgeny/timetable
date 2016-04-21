@@ -67,6 +67,7 @@ type
     procedure DeleteEmpty(const fc: TBooleanArray; const fr: TBooleanArray);
     procedure DrawNewWindowBtn(aRect: TRect; aRow: Integer; aCol: Integer);
     procedure DrawTriangle(aRect: TRect; aRow: Integer; aCol: Integer);
+    procedure SetupCBs;
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
     procedure SetupData;
@@ -125,17 +126,15 @@ begin
           w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
         end;
         Canvas.Pen.Color := clBlack;
-        if i <> 0 then
-          Canvas.Line(
-            aRect.Left ,aRect.Top + BorderMargin + FRecordHeight * i,
+        if (i <> 0) and (FRecordHeight <> 0) then
+          Canvas.Line(aRect.Left, aRect.Top + BorderMargin + FRecordHeight * i,
             aRect.Right + RightMargin,
             aRect.Top + BorderMargin + FRecordHeight * i);
       end;
       DrawNewWindowBtn(aRect, aRow, aCol);
       if (w > ColWidths[aCol] - RightMargin - BorderMargin) or
         (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight >
-        RowHeights[aRow] - BorderMargin)
-      then
+        RowHeights[aRow] - BorderMargin) then
         DrawTriangle(aRect, aRow, aCol);
     end
 end;
@@ -225,6 +224,7 @@ procedure TTimetableWindow.AssignData(var fc: TBooleanArray; var fr: TBooleanArr
 var
   hset: Boolean;
   i, j, k, c: Integer;
+  t : ^String;
 begin
   hset := False;
   SetLength(FData, 0, 0, 0);
@@ -251,12 +251,12 @@ begin
             c += 1;
             SetLength(FData[i][j][High(FData[i][j])],
               Length(FData[i][j][High(FData[i][j])]) + 1);
-            FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] := '';
+            {Getting the pointer to the string we will be putting data into}
+            t := @FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])];
+            t^ := '';
             if DisplayedNamesCLB.Checked[k - 3] then
-              FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
-                SQLQuery.Fields[k].DisplayName + ': ';
-            FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])] +=
-              SQLQuery.Fields[k].AsString;
+              t^ += SQLQuery.Fields[k].DisplayName + ': ';
+            t^ += SQLQuery.Fields[k].AsString;
           end;
         if not hset then
         begin
@@ -291,6 +291,23 @@ begin
       RightMargin);
     FExpandTriangles[aRow][aCol] := CreatePolygonRgn(trpts, 3, 1);
   end;
+end;
+
+procedure TTimetableWindow.SetupCBs;
+var
+  i: Integer;
+begin
+  for i := 0 to High(FColList) do
+  begin
+    VerticalCB.AddItem(FColList[i].DisplayName, FColList[i]);
+    HorizontalCB.AddItem(FColList[i].DisplayName, FColList[i]);
+    DisplayedFieldsCLB.AddItem(FColList[i].DisplayName, FColList[i]);
+    DisplayedNamesCLB.AddItem(FColList[i].DisplayName, FColList[i]);
+  end;
+  DisplayedFieldsCLB.CheckAll(cbChecked);
+  DisplayedNamesCLB.CheckAll(cbChecked);
+  VerticalCB.ItemIndex := 0;
+  HorizontalCB.ItemIndex := 1;
 end;
 
 procedure TTimetableWindow.RemoveFilter(Sender: TObject);
@@ -337,6 +354,7 @@ const
   FixedRowHeight = 32;
   FixedColWidth = 170;
   StandartColWidth = 320;
+  MinRowHeight = 25;
 var i: Integer;
 begin
   SetupFixed(FRows, VerticalCB, FRowIDs);
@@ -347,7 +365,7 @@ begin
   TimetableDG.RowHeights[0] := FixedRowHeight;
   TimetableDG.ColWidths[0] := FixedColWidth;
   for i := 1 to TimetableDG.RowCount - 1 do
-    TimetableDG.RowHeights[i] := FRecordHeight;
+    TimetableDG.RowHeights[i] := Max(FRecordHeight, MinRowHeight);
   for i := 1 to TimetableDG.ColCount - 1 do
     TimetableDG.ColWidths[i] := StandartColWidth;
   TimetableDG.Invalidate;
@@ -410,7 +428,6 @@ begin
 end;
 
 procedure TTimetableWindow.FormCreate(Sender: TObject);
-var i: Integer;
 begin
   FOpenInNewWindowImage := TPortableNetworkGraphic.Create;
   FOpenInNewWindowImage.LoadFromFile('icons/NewWindow.png');
@@ -426,17 +443,7 @@ begin
     EndEllipsis := True;
   end;
   FColList := TTimetableQuery.GetFullColList(Metadata.TimetableTable);
-  for i := 0 to High(FColList) do
-  begin
-    VerticalCB.AddItem(FColList[i].DisplayName, FColList[i]);
-    HorizontalCB.AddItem(FColList[i].DisplayName, FColList[i]);
-    DisplayedFieldsCLB.AddItem(FColList[i].DisplayName, FColList[i]);
-    DisplayedNamesCLB.AddItem(FColList[i].DisplayName, FColList[i]);
-  end;
-  DisplayedFieldsCLB.CheckAll(cbChecked);
-  DisplayedNamesCLB.CheckAll(cbChecked);
-  VerticalCB.ItemIndex := 0;
-  HorizontalCB.ItemIndex := 1;
+  SetupCBs;
   SetupGrid;
 end;
 
