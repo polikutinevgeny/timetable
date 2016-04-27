@@ -36,8 +36,7 @@ type
     FMode: TCardMode;
     procedure CreateLabel(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol);
     procedure AddEdit(ACol: TCol);
-    procedure AddCB(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol;
-      AVerticalID: String; AHorizontalID: String);
+    procedure AddCB(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol);
     procedure GetID;
     procedure PrepareQuery;
     procedure Check;
@@ -121,8 +120,9 @@ begin
       Exit;
     end;
   end;
-  if FMode = cmNew then
+  if (FMode = cmNew) or (FMode = cmTTNew) then
     GetID;
+  SQLQuery.Edit;
 end;
 
 procedure TCardWindow.CreateLabel(ACol: TCol; AVerticalCol: TCol;
@@ -161,8 +161,8 @@ begin
   ScrollBox.Tag := ScrollBox.Tag + 1;
 end;
 
-procedure TCardWindow.AddCB(ACol: TCol; AVerticalCol: TCol;
-  AHorizontalCol: TCol; AVerticalID: String; AHorizontalID: String);
+procedure TCardWindow.AddCB(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol
+  );
 var
   tcb: TDBLookupComboBox;
   tds: TDataSource;
@@ -275,8 +275,7 @@ begin
   for i := 0 to High(Table.Cols) do
     AddEdit(Table.Cols[i]);
   for i := 0 to High(Table.ForeignKeys) do
-    AddCB(Table.ForeignKeys[i], AVerticalCol, AHorizontalCol, AVerticalID,
-      AHorizontalID);
+    AddCB(Table.ForeignKeys[i], AVerticalCol, AHorizontalCol);
   if (FMode = cmTTNew) then
   begin
     SQLQuery.FieldByName(AVerticalCol.SQLName).AsString := AVerticalID;

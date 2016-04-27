@@ -151,57 +151,59 @@ begin
         FRows[aRow - 1], FTextStyle);
       FTextStyle.Wordbreak := False;
     end
-    else if (aCol <> 0) and (aRow <> 0) and
-      (Length(FData[aRow - 1][aCol - 1]) <> 0) then
+    else if (aCol <> 0) and (aRow <> 0) then
     begin
-      full := False;
       aRect.Right := aRect.Right - ButtonSize;
       aRect.Left := aRect.Left + ButtonSize;
-      for i := 0 to High(FData[aRow - 1][aCol - 1]) do
+      if (Length(FData[aRow - 1][aCol - 1]) <> 0) then
       begin
-        if full then
-          break;
-        w := 0;
-        for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
+        full := False;
+        for i := 0 to High(FData[aRow - 1][aCol - 1]) do
         begin
-          if FRecordHeight * i + Canvas.TextHeight('Hlg') * (j + 1) >
-            RowHeights[aRow]
-          then
-          begin
-            full := True;
+          if full then
             break;
-          end;
-          Canvas.TextRect(aRect, aRect.Left,
-            aRect.Top + BorderMargin + FRecordHeight * i +
-            Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
-            FTextStyle);
-          w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
-        end;
-        Canvas.Pen.Color := clBlack;
-        if (i <> 0) and (FRecordHeight <> 0) then
-          Canvas.Line(aRect.Left - ButtonSize,
-            aRect.Top + BorderMargin + FRecordHeight * i,
-            aRect.Right + ButtonSize,
-            aRect.Top + BorderMargin + FRecordHeight * i);
-        if (FCurrentCell.x = aCol) and (FCurrentCell.y = aRow) then
+          w := 0;
+          for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
           begin
-            DrawDragBtn(aRect.Left - ButtonSize, aRect.Top + FRecordHeight * i);
-            DrawEditBtn(aRect.Left - ButtonSize,
-              aRect.Top + FRecordHeight * i + ButtonSize);
-            DrawRemoveBtn(aRect.Left - ButtonSize,
-              aRect.Top + FRecordHeight * i + ButtonSize * 2);
+            if FRecordHeight * i + Canvas.TextHeight('Hlg') * (j + 1) >
+              RowHeights[aRow]
+            then
+            begin
+              full := True;
+              break;
+            end;
+            Canvas.TextRect(aRect, aRect.Left,
+              aRect.Top + BorderMargin + FRecordHeight * i +
+              Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
+              FTextStyle);
+            w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
           end;
+          Canvas.Pen.Color := clBlack;
+          if (i <> 0) and (FRecordHeight <> 0) then
+            Canvas.Line(aRect.Left - ButtonSize,
+              aRect.Top + BorderMargin + FRecordHeight * i,
+              aRect.Right + ButtonSize,
+              aRect.Top + BorderMargin + FRecordHeight * i);
+          if (FCurrentCell.x = aCol) and (FCurrentCell.y = aRow) then
+            begin
+              DrawDragBtn(aRect.Left - ButtonSize, aRect.Top + FRecordHeight * i);
+              DrawEditBtn(aRect.Left - ButtonSize,
+                aRect.Top + FRecordHeight * i + ButtonSize);
+              DrawRemoveBtn(aRect.Left - ButtonSize,
+                aRect.Top + FRecordHeight * i + ButtonSize * 2);
+            end;
+        end;
+        if (w > ColWidths[aCol] - ButtonSize * 2 - BorderMargin) or
+          (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow])
+        then
+          DrawTriangle(aRect, aRow, aCol);
       end;
       if (FCurrentCell.x = aCol) and (FCurrentCell.y = aRow) then
       begin
         DrawNewWindowBtn(aRect.Right, aRect.Top);
         DrawAddBtn(aRect.Right, aRect.Top + ButtonSize);
       end;
-      if (w > ColWidths[aCol] - ButtonSize * 2 - BorderMargin) or
-        (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow] - BorderMargin)
-      then
-        DrawTriangle(aRect, aRow, aCol);
-    end
+    end;
 end;
 
 procedure TTimetableWindow.TimetableDGEndDrag(Sender, Target: TObject; X,
@@ -452,15 +454,15 @@ var
   rf: TFilter;
   df: TDirectoryForm;
 begin
-  cf := TFilter.Create(nil, Metadata.TimetableTable, [
+  df := TDirectoryForm.Create(Application, Metadata.TimetableTable);
+  cf := TFilter.Create(df.FilterSB, Metadata.TimetableTable, [
     (VerticalCB.Items.Objects[VerticalCB.ItemIndex] as TCol).Table.PrimaryKey],
     False);
   cf.SetupHiddenFilter(FRowIDs[ARow - 1]);
-  rf := TFilter.Create(nil, Metadata.TimetableTable, [
+  rf := TFilter.Create(df.FilterSB, Metadata.TimetableTable, [
     (HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol).Table.PrimaryKey],
     False);
   rf.SetupHiddenFilter(FColIDs[ACol - 1]);
-  df := TDirectoryForm.Create(Application, Metadata.TimetableTable);
   df.SetHiddenFilters([rf, cf]);
   df.Show;
 end;
@@ -584,7 +586,7 @@ begin
   TimetableDG.RowHeights[0] := FixedRowHeight;
   TimetableDG.ColWidths[0] := FixedColWidth;
   for i := 1 to TimetableDG.RowCount - 1 do
-    TimetableDG.RowHeights[i] := Max(FRecordHeight + BorderMargin * 2, MinRowHeight);
+    TimetableDG.RowHeights[i] := Max(FRecordHeight + BorderMargin, MinRowHeight);
   for i := 1 to TimetableDG.ColCount - 1 do
     TimetableDG.ColWidths[i] := Max(StandartColWidth, TimetableDG.ColWidths[i]);
   TimetableDG.Invalidate;
@@ -614,12 +616,10 @@ begin
 end;
 
 procedure TTimetableWindow.UpdateData;
-//var col, row: Integer;
 begin
-  //row := TimetableDG.Selection.Top;
-  //col := TimetableDG.Selection.Left;
   SQLQuery.Refresh;
   SetupData(False);
+  TimetableDG.Invalidate;
 end;
 
 procedure TTimetableWindow.SetupData(GetData: Boolean);
@@ -703,7 +703,7 @@ begin
   with TimetableDG do
   begin;
     ColWidths[Selection.Left] := StandartColWidth;
-    RowHeights[Selection.Top] := FRecordHeight;
+    RowHeights[Selection.Top] := FRecordHeight + BorderMargin * 2;
   end;
 end;
 

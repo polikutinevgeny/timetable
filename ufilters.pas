@@ -30,7 +30,7 @@ type
       FRemoveBtn: TRemoveButton;
       FTable: TTable;
       FCols: TColArray;
-      FVisible: Boolean;
+      FEnabled: Boolean;
       function GetCol: TCol;
       function GetAction: String;
       function GetValue: String;
@@ -42,11 +42,11 @@ type
       procedure CreateRemoveBtn(AScrollbox: TScrollBox);
     public
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
-        ACols: array of TCol; AVisible: Boolean = True);
+        ACols: array of TCol; AEnabled: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
       procedure SetupHiddenFilter(AValueTEValue: String);
       function Copy(AScrollbox: TScrollBox): TFilter;
-      property Visible: Boolean read FVisible;
+      property Visible: Boolean read FEnabled;
       property Column: TCol read GetCol;
       property Action: String read GetAction;
       property Value: String read GetValue;
@@ -102,7 +102,7 @@ end;
 
 procedure TFilter.FilterUpdate(Sender: TObject);
 begin
-  if FVisible then
+  if FEnabled then
     OnFilterUpdate;
 end;
 
@@ -130,6 +130,7 @@ begin
     Width := 150;
     ReadOnly := True;
     OnChange := @FilterUpdate;
+    Enabled := FEnabled;
     Parent := AScrollbox;
   end;
 end;
@@ -144,6 +145,7 @@ begin
     Width := 80;
     ReadOnly := True;
     OnChange := @FilterUpdate;
+    Enabled := FEnabled;
     Parent := AScrollbox;
   end;
 end;
@@ -157,6 +159,7 @@ begin
     Text := '';
     Width := 300;
     OnChange := @FilterUpdate;
+    Enabled := FEnabled;
     Parent := AScrollbox;
   end;
 end;
@@ -174,14 +177,15 @@ begin
     ShowHint := True;
     Flat := True;
     Parent := AScrollbox;
+    Enabled := FEnabled;
     OnClick := @FilterRemove;
   end;
 end;
 
 constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
-  ACols: array of TCol; AVisible: Boolean);
+  ACols: array of TCol; AEnabled: Boolean);
 begin
-  FVisible := AVisible;
+  FEnabled := AEnabled;
   CreateColumnCB(AScrollbox, ACols);
   CreateActionCB(AScrollbox);
   CreateValueTE(AScrollbox);
@@ -192,8 +196,6 @@ end;
 
 procedure TFilter.Draw(AScrollbox: TScrollBox);
 begin
-  if not FVisible then
-    exit;
   FColumnCB.Top := UpperPadding + AScrollbox.Tag * Interval;
   FColumnCB.Left := 20;
   FActionCB.Top := UpperPadding + AScrollbox.Tag * Interval;
