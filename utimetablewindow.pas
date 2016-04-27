@@ -573,7 +573,7 @@ const
   FixedRowHeight = 32;
   FixedColWidth = 170;
   StandartColWidth = 320;
-  MinRowHeight = 25;
+  MinRowHeight = 75;
 var i: Integer;
 begin
   SetupFixed(FRows, VerticalCB, FRowIDs);
@@ -584,7 +584,7 @@ begin
   TimetableDG.RowHeights[0] := FixedRowHeight;
   TimetableDG.ColWidths[0] := FixedColWidth;
   for i := 1 to TimetableDG.RowCount - 1 do
-    TimetableDG.RowHeights[i] := Max(FRecordHeight, MinRowHeight);
+    TimetableDG.RowHeights[i] := Max(FRecordHeight + BorderMargin * 2, MinRowHeight);
   for i := 1 to TimetableDG.ColCount - 1 do
     TimetableDG.ColWidths[i] := Max(StandartColWidth, TimetableDG.ColWidths[i]);
   TimetableDG.Invalidate;

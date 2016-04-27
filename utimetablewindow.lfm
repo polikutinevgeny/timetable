@@ -679,7 +679,7 @@ object TimetableWindow: TTimetableWindow
     Database = DB.IBConnection
     Transaction = DB.SQLTransaction
     ReadOnly = True
-    Options = []
+    Options = [sqoRefreshUsingSelect]
     Params = <>
     left = 872
     top = 8

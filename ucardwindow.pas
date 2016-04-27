@@ -191,11 +191,6 @@ begin
     Left := 150;
     Top := 20 + 50 * ScrollBox.Tag;
     Width := 400;
-    if (FMode = cmTTNew) then
-      if (ACol = AVerticalCol) then
-        KeyValue := AVerticalID
-      else if (ACol = AHorizontalCol) then
-        KeyValue := AHorizontalID;
     Parent := ScrollBox;
   end;
   SetLength(FComboboxes, Length(FComboboxes) + 1);
@@ -234,6 +229,7 @@ begin
     InsertSQL.Text := FQuery.InsertQueryAsText;
     Prepare;
     Open;
+    Edit;
   end;
 end;
 
@@ -248,7 +244,6 @@ end;
 procedure TCardWindow.Finish;
 begin
   Check;
-  SQLQuery.Edit;
   SQLQuery.Post;
   SQLTransaction.CommitRetaining;
   UDB.DB.SQLTransaction.CommitRetaining;
@@ -282,6 +277,11 @@ begin
   for i := 0 to High(Table.ForeignKeys) do
     AddCB(Table.ForeignKeys[i], AVerticalCol, AHorizontalCol, AVerticalID,
       AHorizontalID);
+  if (FMode = cmTTNew) then
+  begin
+    SQLQuery.FieldByName(AVerticalCol.SQLName).AsString := AVerticalID;
+    SQLQuery.FieldByName(AHorizontalCol.SQLName).AsString := AHorizontalID;
+  end;
 end;
 
 end.
