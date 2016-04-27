@@ -7,7 +7,6 @@ object CardWindow: TCardWindow
   ClientHeight = 600
   ClientWidth = 700
   OnClose = FormClose
-  OnShow = FormShow
   LCLVersion = '1.6.0.4'
   object ToolBar: TToolBar
     Left = 0

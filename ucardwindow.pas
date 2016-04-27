@@ -10,7 +10,7 @@ uses
 
 type
 
-  TCardMode = (cmNew, cmEdit);
+  TCardMode = (cmNew, cmEdit, cmTTNew, cmTTEdit);
 
   TCardNotFilledException = class(Exception);
 
@@ -28,16 +28,16 @@ type
     CancelBtn: TToolButton;
     procedure CancelBtnClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
-    procedure FormShow(Sender: TObject);
     procedure OKBtnClick(Sender: TObject);
     procedure SaveBtnClick(Sender: TObject);
   private
     FQuery: TCardQuery;
     FComboboxes: array of TDBLookupComboBox;
     FMode: TCardMode;
-    procedure CreateLabel(ACol: TCol);
+    procedure CreateLabel(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol);
     procedure AddEdit(ACol: TCol);
-    procedure AddCB(ACol: TCol);
+    procedure AddCB(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol;
+      AVerticalID: String; AHorizontalID: String);
     procedure GetID;
     procedure PrepareQuery;
     procedure Check;
@@ -45,7 +45,9 @@ type
   public
     Table: TTable;
     ID: Integer;
-    procedure Setup(ATable: TTable; AID: Integer = -1; AMode: TCardMode = cmNew);
+    procedure Setup(ATable: TTable; AID: Integer = -1; AMode: TCardMode = cmNew;
+      AVerticalCol: TCol = nil; AHorizontalCol: TCol = nil; AVerticalID: String = '-1';
+      AHorizontalID: String = '-1');
   end;
 
   procedure RegisterCard(ACard: TCardWindow);
@@ -94,16 +96,6 @@ end;
 
 { TCardWindow }
 
-procedure TCardWindow.FormShow(Sender: TObject);
-var i: Integer;
-begin
-  PrepareQuery;
-  for i := 0 to High(Table.Cols) do
-    AddEdit(Table.Cols[i]);
-  for i := 0 to High(Table.ForeignKeys) do
-    AddCB(Table.ForeignKeys[i]);
-end;
-
 procedure TCardWindow.OKBtnClick(Sender: TObject);
 begin
   try
@@ -133,7 +125,8 @@ begin
     GetID;
 end;
 
-procedure TCardWindow.CreateLabel(ACol: TCol);
+procedure TCardWindow.CreateLabel(ACol: TCol; AVerticalCol: TCol;
+  AHorizontalCol: TCol);
 var
   tl: TLabel;
 begin
@@ -143,6 +136,9 @@ begin
     Caption := ACol.DisplayName;
     Left := 20;
     Top := 20 + 50 * ScrollBox.Tag;
+    if (FMode = cmTTEdit) or (FMode = cmTTNew) then
+      if (ACol = AVerticalCol) or (ACol = AHorizontalCol) then
+        Color := clYellow;
     Parent := ScrollBox;
   end;
 end;
@@ -151,7 +147,7 @@ procedure TCardWindow.AddEdit(ACol: TCol);
 var
   te: TDBEdit;
 begin
-  CreateLabel(ACol);
+  CreateLabel(ACol, nil, nil);
   te := TDBEdit.Create(ScrollBox);
   with te do
   begin
@@ -165,13 +161,14 @@ begin
   ScrollBox.Tag := ScrollBox.Tag + 1;
 end;
 
-procedure TCardWindow.AddCB(ACol: TCol);
+procedure TCardWindow.AddCB(ACol: TCol; AVerticalCol: TCol;
+  AHorizontalCol: TCol; AVerticalID: String; AHorizontalID: String);
 var
   tcb: TDBLookupComboBox;
   tds: TDataSource;
   tsq: TSQLQuery;
 begin
-  CreateLabel(ACol);
+  CreateLabel(ACol, AVerticalCol, AHorizontalCol);
   tsq := TSQLQuery.Create(ScrollBox);
   with tsq do
   begin
@@ -194,6 +191,11 @@ begin
     Left := 150;
     Top := 20 + 50 * ScrollBox.Tag;
     Width := 400;
+    if (FMode = cmTTNew) then
+      if (ACol = AVerticalCol) then
+        KeyValue := AVerticalID
+      else if (ACol = AHorizontalCol) then
+        KeyValue := AHorizontalID;
     Parent := ScrollBox;
   end;
   SetLength(FComboboxes, Length(FComboboxes) + 1);
@@ -266,11 +268,20 @@ begin
   Close;
 end;
 
-procedure TCardWindow.Setup(ATable: TTable; AID: Integer; AMode: TCardMode);
+procedure TCardWindow.Setup(ATable: TTable; AID: Integer; AMode: TCardMode;
+  AVerticalCol: TCol; AHorizontalCol: TCol; AVerticalID: String;
+  AHorizontalID: String);
+var i: Integer;
 begin
   Table := ATable;
   ID := AID;
   FMode := AMode;
+  PrepareQuery;
+  for i := 0 to High(Table.Cols) do
+    AddEdit(Table.Cols[i]);
+  for i := 0 to High(Table.ForeignKeys) do
+    AddCB(Table.ForeignKeys[i], AVerticalCol, AHorizontalCol, AVerticalID,
+      AHorizontalID);
 end;
 
 end.

@@ -50,8 +50,12 @@ type
       function GetSelectAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
     public
       function SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
+      class function DeleteQueryAsText(ATable: TTable): String;
+      class function UpdateQueryAsText(ATable: TTable; AVertColumn: TCol;
+        AHorizColumn: TCol): String;
       class function GetFullColList(ATable: TTable): TColArray;
       class function GetValuesListQuery(ACol: TCol): String;
+      class function GetRealColList(ATable: TTable): TColArray;
   end;
 
   { TCardQuery }
@@ -184,6 +188,20 @@ begin
     Result += '"' + AHorizColumn.DisplayName + '"';
 end;
 
+class function TTimetableQuery.DeleteQueryAsText(ATable: TTable): String;
+begin
+  Result := Format('DELETE FROM %s WHERE %s = :ID', [
+    ATable.SQLName, ATable.PrimaryKey.SQLName]);
+end;
+
+class function TTimetableQuery.UpdateQueryAsText(ATable: TTable;
+  AVertColumn: TCol; AHorizColumn: TCol): String;
+begin
+  Result := Format('UPDATE %s SET %s = :%s, %s = :%s WHERE %s = :%s', [
+    ATable.SQLName, AVertColumn.SQLName, 'Vert', AHorizColumn.SQLName, 'Horiz',
+    ATable.PrimaryKey.SQLName, 'ID']);
+end;
+
 class function TTimetableQuery.GetFullColList(ATable: TTable): TColArray;
 var
   i, j, w: Integer;
@@ -207,8 +225,8 @@ begin
       s += Format('%s.%s', [Reference.Table.SQLName,
         Reference.Table.Cols[High(Reference.Table.Cols)].SQLName]);
       w += Reference.Table.Cols[High(Reference.Table.Cols)].Width;
-      Result[i] := TCol.Create(s, DisplayName, w, False, False);
-      Result[i].Table := Reference.Table;
+      Result[Length(ATable.Cols) + i] := TCol.Create(s, DisplayName, w, False, False);
+      Result[Length(ATable.Cols) + i].Table := Reference.Table;
     end;
 end;
 
@@ -221,6 +239,16 @@ begin
     Result += ACol.Table.SQLName + '.' + ACol.Table.SortKey.SQLName
   else
     Result += 'Data';
+end;
+
+class function TTimetableQuery.GetRealColList(ATable: TTable): TColArray;
+var i: Integer;
+begin
+  SetLength(Result, Length(ATable.Cols) + Length(ATable.ForeignKeys));
+  for i := 0 to High(ATable.Cols) do
+    Result[i] := ATable.Cols[i];
+  for i := 0 to High(ATable.ForeignKeys) do
+    Result[Length(ATable.Cols) + i] := ATable.ForeignKeys[i];
 end;
 
 { TCardQuery }
