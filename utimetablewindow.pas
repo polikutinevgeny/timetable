@@ -23,11 +23,9 @@ type
     HorizontalLbl: TLabel;
     FieldSelectionLbl: TLabel;
     NameSelelctionLbl: TLabel;
+    Splitter: TSplitter;
     UtilitySQLQuery: TSQLQuery;
     VerticalLbl: TLabel;
-    PairSplitter: TPairSplitter;
-    PairSplitterSide1: TPairSplitterSide;
-    PairSplitterSide2: TPairSplitterSide;
     FilterControlPanel: TPanel;
     RowColControlPanel: TPanel;
     FilterSB: TScrollBox;
