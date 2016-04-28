@@ -84,7 +84,7 @@ type
     FTextStyle: TTextStyle;
     FCurrentCell: TPoint;
     FDraggedID: String;
-    procedure AssignData(var fc: TBooleanArray; var fr: TBooleanArray);
+    procedure FillData(var fc: TBooleanArray; var fr: TBooleanArray);
     procedure DeleteEmpty(const fc: TBooleanArray; const fr: TBooleanArray);
     procedure DrawNewWindowBtn(ALeft: Integer; ATop: Integer);
     procedure DrawAddBtn(ALeft: Integer; ATop: Integer);
@@ -330,7 +330,7 @@ begin
     SetLength(FData, Length(FData), Length(FData[0]) - k);
 end;
 
-procedure TTimetableWindow.AssignData(var fc: TBooleanArray; var fr: TBooleanArray);
+procedure TTimetableWindow.FillData(var fc: TBooleanArray; var fr: TBooleanArray);
 var
   i, j, k, c: Integer;
   t : ^String;
@@ -625,7 +625,7 @@ var fr, fc: array of Boolean;
 begin
   if GetData then
     SelectData;
-  AssignData(fc, fr);
+  FillData(fc, fr);
   if HideEmptyCB.Checked then
     DeleteEmpty(fc, fr);
   SetLength(FExpandTriangles, Length(FRows) + 1, Length(FCols) + 1);
