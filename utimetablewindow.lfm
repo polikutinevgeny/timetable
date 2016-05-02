@@ -655,9 +655,9 @@ object TimetableWindow: TTimetableWindow
     TabAdvance = aaDown
     TabOrder = 4
     OnDblClick = TimetableDGDblClick
+    OnDragDrop = TimetableDGDragDrop
     OnDragOver = TimetableDGDragOver
     OnDrawCell = TimetableDGDrawCell
-    OnEndDrag = TimetableDGEndDrag
     OnMouseDown = TimetableDGMouseDown
     OnMouseMove = TimetableDGMouseMove
     OnMouseUp = TimetableDGMouseUp

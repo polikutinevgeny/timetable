@@ -48,7 +48,7 @@ type
       State: TDragState; var Accept: Boolean);
     procedure TimetableDGDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
-    procedure TimetableDGEndDrag(Sender, Target: TObject; X, Y: Integer);
+    procedure TimetableDGDragDrop(Sender, Target: TObject; X, Y: Integer);
     procedure TimetableDGMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure TimetableDGMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -204,7 +204,7 @@ begin
     end;
 end;
 
-procedure TTimetableWindow.TimetableDGEndDrag(Sender, Target: TObject; X,
+procedure TTimetableWindow.TimetableDGDragDrop(Sender, Target: TObject; X,
   Y: Integer);
 var
   row, col: Integer;
@@ -227,14 +227,15 @@ procedure TTimetableWindow.TimetableDGMouseDown(Sender: TObject;
 var
   i, col, row: Integer;
 begin
-  TimetableDG.MouseToCell(X, Y, col, row);
-  for i := 0 to High(FDragBtns) do
-    if PtInRect(FDragBtns[i], Point(X, Y)) then
-    begin
-      FDraggedID := FIDs[row - 1][col - 1][i];
-      TimetableDG.BeginDrag(True);
-      break;
-    end;
+  if Button = mbLeft then
+    TimetableDG.MouseToCell(X, Y, col, row);
+    for i := 0 to High(FDragBtns) do
+      if PtInRect(FDragBtns[i], Point(X, Y)) then
+      begin
+        FDraggedID := FIDs[row - 1][col - 1][i];
+        TimetableDG.BeginDrag(True);
+        break;
+      end;
 end;
 
 procedure TTimetableWindow.TimetableDGMouseMove(Sender: TObject;
@@ -707,8 +708,10 @@ end;
 
 procedure TTimetableWindow.TimetableDGDragOver(Sender, Source: TObject; X,
   Y: Integer; State: TDragState; var Accept: Boolean);
+var col, row: Integer;
 begin
-  Accept := True;
+  TimetableDG.MouseToCell(X, Y, col, row);
+  Accept := (col > 0) and (row > 0);
 end;
 
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
