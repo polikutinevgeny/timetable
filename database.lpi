@@ -116,6 +116,7 @@
         <Filename Value="uconflictsdm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ConflictsDM"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="UConflictsDM"/>
       </Unit11>
@@ -123,6 +124,7 @@
         <Filename Value="uconflicttreewindow.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="ConflictTreeWindow"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UConflictTreeWindow"/>
       </Unit12>

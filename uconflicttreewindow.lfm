@@ -3,7 +3,7 @@ object ConflictTreeWindow: TConflictTreeWindow
   Height = 769
   Top = 197
   Width = 830
-  Caption = 'ConflictTreeWindow'
+  Caption = 'Conflicts'
   ClientHeight = 769
   ClientWidth = 830
   OnClose = FormClose
@@ -38,6 +38,14 @@ object ConflictTreeWindow: TConflictTreeWindow
       Width = 160
       Caption = 'Remove marks'
       OnClick = RemoveMarksBtnClick
+    end
+    object RefreshBtn: TSpeedButton
+      Left = 176
+      Height = 32
+      Top = 8
+      Width = 160
+      Caption = 'Refresh'
+      OnClick = RefreshBtnClick
     end
   end
   object ImageList: TImageList

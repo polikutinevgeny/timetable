@@ -17,9 +17,11 @@ type
     ImageList: TImageList;
     ButtonPnl: TPanel;
     RemoveMarksBtn: TSpeedButton;
+    RefreshBtn: TSpeedButton;
     TreeView: TTreeView;
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure RefreshBtnClick(Sender: TObject);
     procedure RemoveMarksBtnClick(Sender: TObject);
     procedure TreeViewDblClick(Sender: TObject);
   private
@@ -46,12 +48,21 @@ end;
 procedure TConflictTreeWindow.FormCreate(Sender: TObject);
 begin
   Refresh;
-  RegisterDataUpdateListener(@Refresh);
+end;
+
+procedure TConflictTreeWindow.RefreshBtnClick(Sender: TObject);
+begin
+  Refresh;
 end;
 
 procedure TConflictTreeWindow.RemoveMarksBtnClick(Sender: TObject);
+var i: Integer;
 begin
-  Refresh;
+  for i := 0 to TreeView.Items.Count - 1 do
+  begin
+    TreeView.Items[i].ImageIndex := -1;
+    TreeView.Items[i].SelectedIndex := -1;
+  end;
 end;
 
 procedure TConflictTreeWindow.TreeViewDblClick(Sender: TObject);
