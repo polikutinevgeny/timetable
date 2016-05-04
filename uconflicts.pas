@@ -87,6 +87,7 @@ var
 begin
   SetLength(FIDs, 0);
   t1 := ATreeView.Items.Add(nil, Name);
+  t1.SelectedIndex := t1.ImageIndex;
   for j := 0 to High(Conflicts) do
   begin
     ConflictsDM.SQLQuery.Close;
@@ -107,6 +108,8 @@ begin
         t2.Parent.ImageIndex := 0;
         Break;
       end;
+    t2.Parent.SelectedIndex := t2.Parent.ImageIndex;
+    t2.SelectedIndex := t2.ImageIndex;
     while not ConflictsDM.SQLQuery.EOF do
     begin
       s := '';

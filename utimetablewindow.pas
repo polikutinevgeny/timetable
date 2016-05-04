@@ -101,10 +101,13 @@ type
     procedure DrawConflictBtn(ALeft: Integer; ATop: Integer; aRow: Integer;
       aCol: Integer; aNum: Integer);
     procedure Expand(ARow: Integer; ACol: Integer);
+    procedure FillRecord(j: Integer; i: Integer; var fr: TBooleanArray; var fc: TBooleanArray);
     procedure OpenAsDirectory(ARow: Integer; ACol: Integer);
     procedure AddRecord(ARow: Integer; ACol: Integer);
     procedure EditRecord(ARow: Integer; ACol: Integer; AIndex: Integer);
     procedure DeleteRecord(ARow: Integer; ACol: Integer; AIndex: Integer);
+    procedure PrintOutRecords(var w: Integer; aRect: TRect;
+      aRow: Integer; aCol: Integer);
     procedure SetupCBs;
     procedure UpdateStatus;
     procedure RemoveFilter(Sender: TObject);
@@ -135,8 +138,7 @@ const
 procedure TTimetableWindow.TimetableDGDrawCell(Sender: TObject; aCol,
   aRow: Integer; aRect: TRect; aState: TGridDrawState);
 var
-  i, j, w: Integer;
-  full: Boolean;
+  w: Integer;
 begin
   Canvas.FillRect(aRect);
   DeleteObject(FExpandTriangles[aRow][aCol]);
@@ -164,47 +166,7 @@ begin
       aRect.Left := aRect.Left + ButtonSize;
       if (Length(FData[aRow - 1][aCol - 1]) <> 0) then
       begin
-        full := False;
-        for i := 0 to High(FData[aRow - 1][aCol - 1]) do
-        begin
-          if full then
-            break;
-          w := 0;
-          for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
-          begin
-            if FRecordHeight * i + Canvas.TextHeight('Hlg') * (j + 1) >
-              RowHeights[aRow]
-            then
-            begin
-              full := True;
-              break;
-            end;
-            Canvas.TextRect(aRect, aRect.Left,
-              aRect.Top + BorderMargin + FRecordHeight * i +
-              Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
-              FTextStyle);
-            w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
-          end;
-          Canvas.Pen.Color := clBlack;
-          if (i <> 0) and (FRecordHeight <> 0) then
-            Canvas.Line(aRect.Left - ButtonSize,
-              aRect.Top + BorderMargin + FRecordHeight * i,
-              aRect.Right + ButtonSize,
-              aRect.Top + BorderMargin + FRecordHeight * i);
-          if (FCurrentCell.x = aCol) and (FCurrentCell.y = aRow) then
-            begin
-              DrawDragBtn(aRect.Left - ButtonSize, aRect.Top + FRecordHeight * i);
-              DrawEditBtn(aRect.Left - ButtonSize,
-                aRect.Top + FRecordHeight * i + ButtonSize);
-              DrawRemoveBtn(aRect.Left - ButtonSize,
-                aRect.Top + FRecordHeight * i + ButtonSize * 2);
-            end;
-          if Length(FConflicts[aRow - 1][aCol - 1][i]) > 0 then
-            DrawConflictBtn(aRect.Left - ButtonSize,
-              aRect.Top + FRecordHeight * i + ButtonSize * 3, aRow, aCol, i)
-          else
-            FConflictBtns[aRow][aCol][i] := Rect(0, 0, 0, 0);
-        end;
+        PrintOutRecords(w, aRect, aRow, aCol);
         if (w > ColWidths[aCol] - ButtonSize * 2 - BorderMargin) or
           (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow])
         then
@@ -361,7 +323,6 @@ end;
 procedure TTimetableWindow.FillData(var fc: TBooleanArray; var fr: TBooleanArray);
 var
   i, j, k, c: Integer;
-  t: array of array of String;
 begin
   SetLength(FData, 0, 0, 0);
   SetLength(FIDs, 0, 0, 0);
@@ -380,34 +341,7 @@ begin
   SQLQuery.First;
   for i := 0 to High(FRows) do
     for j := 0 to High(FCols) do
-    begin
-      t := FData[i][j];
-      while (not SQLQuery.EOF) and
-        (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
-        (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
-      begin
-        fr[i] := True;
-        fc[j] := True;
-        SetLength(t, Length(t) + 1);
-        SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
-        SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
-        SetLength(FConflictBtns[i + 1][j + 1], Length(FConflictBtns[i + 1][j + 1]) + 1);
-        FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
-        FConflicts[i][j][High(FConflicts[i][j])] :=
-          ConflictTypesContainer.GetConflicts(FIDs[i][j][High(FIDs[i][j])]);
-        for k := 3 to SQLQuery.FieldCount - 1 do
-          if DisplayedFieldsCLB.Checked[k - 3] then
-          begin
-            SetLength(t[High(t)], Length(t[High(t)]) + 1);
-            t[High(t)][High(t[High(t)])] := '';
-            if DisplayedNamesCLB.Checked[k - 3] then
-              t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].DisplayName + ': ';
-            t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].AsString;
-          end;
-        SQLQuery.Next;
-      end;
-      FData[i][j] := t;
-    end;
+      FillRecord(j, i, fr, fc);
   c := 0;
   for k := 3 to SQLQuery.FieldCount - 1 do
     if DisplayedFieldsCLB.Checked[k - 3] then
@@ -491,6 +425,42 @@ begin
     FRecordHeight + BorderMargin, TimetableDG.RowHeights[ARow]);
 end;
 
+procedure TTimetableWindow.FillRecord(j: Integer; i: Integer;
+  var fr: TBooleanArray; var fc: TBooleanArray);
+var
+  t: array of array of String;
+  k : Integer;
+begin
+  t := FData[i][j];
+  while (not SQLQuery.EOF) and
+    (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
+    (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
+  begin
+    fr[i] := True;
+    fc[j] := True;
+    SetLength(t, Length(t) + 1);
+    SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
+    SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
+    SetLength(FConflictBtns[i + 1][j + 1], Length(FConflictBtns[i + 1][j
+      + 1]) + 1);
+    FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
+    FConflicts[i][j][High(FConflicts[i][j])] :=
+      ConflictTypesContainer.GetConflicts(FIDs[i][j][High(FIDs[i][j])]);
+    for k := 3 to SQLQuery.FieldCount - 1 do
+      if DisplayedFieldsCLB.Checked[k - 3] then
+      begin
+        SetLength(t[High(t)], Length(t[High(t)]) + 1);
+        t[High(t)][High(t[High(t)])] := '';
+        if DisplayedNamesCLB.Checked[k - 3] then
+          t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].DisplayName
+            + ': ';
+        t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].AsString;
+      end;
+    SQLQuery.Next;
+  end;
+  FData[i][j] := t;
+end;
+
 procedure TTimetableWindow.OpenAsDirectory(ARow: Integer; ACol: Integer);
 var
   cf: TFilter;
@@ -555,6 +525,59 @@ begin
   end;
   UtilitySQLQuery.Close;
   OnDataUpdate;
+end;
+
+procedure TTimetableWindow.PrintOutRecords(var w: Integer; aRect: TRect;
+  aRow: Integer; aCol: Integer);
+var
+  full: Boolean;
+  j: Integer;
+  i: Integer;
+begin
+  with TimetableDG do
+  begin;
+    full := False;
+    for i := 0 to High(FData[aRow - 1][aCol - 1]) do
+    begin
+      if full then
+        break;
+      w := 0;
+      for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
+      begin
+        if FRecordHeight * i + Canvas.TextHeight('Hlg') * (j + 1) > RowHeights[aRow]
+        then
+        begin
+          full := True;
+          break;
+        end;
+        Canvas.TextRect(aRect, aRect.Left,
+          aRect.Top + BorderMargin + FRecordHeight * i +
+          Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
+          FTextStyle);
+        w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
+      end;
+      Canvas.Pen.Color := clBlack;
+      if (i <> 0) and (FRecordHeight <> 0) then
+        Canvas.Line(aRect.Left - ButtonSize,
+          aRect.Top + BorderMargin + FRecordHeight * i,
+          aRect.Right + ButtonSize,
+          aRect.Top + BorderMargin + FRecordHeight * i);
+      if (FCurrentCell.x = aCol) and (FCurrentCell.y = aRow) then
+        begin
+          DrawDragBtn(aRect.Left - ButtonSize, aRect.Top + FRecordHeight
+            * i);
+          DrawEditBtn(aRect.Left - ButtonSize,
+            aRect.Top + FRecordHeight * i + ButtonSize);
+          DrawRemoveBtn(aRect.Left - ButtonSize,
+            aRect.Top + FRecordHeight * i + ButtonSize * 2);
+        end;
+      if Length(FConflicts[aRow - 1][aCol - 1][i]) > 0 then
+        DrawConflictBtn(aRect.Left - ButtonSize,
+          aRect.Top + FRecordHeight * i + ButtonSize * 3, aRow, aCol, i)
+      else
+        FConflictBtns[aRow][aCol][i] := Rect(0, 0, 0, 0);
+    end;
+  end;
 end;
 
 procedure TTimetableWindow.SetupCBs;
