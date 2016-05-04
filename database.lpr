@@ -8,7 +8,8 @@ uses
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
-  UQuery, UCardWindow, UNotification, UTimetableWindow;
+  UQuery, UCardWindow, UNotification, UTimetableWindow, UConflicts, UConflictsDM,
+  UConflictTreeWindow;
 
 {$R *.res}
 
@@ -17,6 +18,8 @@ begin
   Application.Initialize;
   Application.CreateForm(TMainWindow, MainWindow);
   Application.CreateForm(TDB, DB);
+  Application.CreateForm(TConflictsDM, ConflictsDM);
+  Application.CreateForm(TConflictTreeWindow, ConflictTreeWindow);
   Application.CreateForm(TTimetableWindow, TimetableWindow);
   Application.Run;
 end.

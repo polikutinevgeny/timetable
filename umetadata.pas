@@ -55,6 +55,7 @@ type
         ASQLName, ADisplayName: String; ACols: array of TCol;
         AGenerator: String; IsTimeTable: Boolean = False; SortBy: String = '');
       function GetReference(ATableName: String): TCol;
+      function GetColByName(ATableName: String; AColName: String): TCol;
   end;
 
 var
@@ -104,6 +105,31 @@ begin
   Result := t.PrimaryKey;
 end;
 
+function TMetadata.GetColByName(ATableName: String; AColName: String): TCol;
+var
+  t: TTable;
+  i: Integer;
+begin
+  for i := 0 to High(Tables) do
+    if Tables[i].SQLName = ATableName then
+    begin
+      t := Tables[i];
+      break;
+    end;
+  for i := 0 to High(t.Cols) do
+    if t.Cols[i].SQLName = AColName then
+    begin
+      Result := t.Cols[i];
+      Exit;
+    end;
+  for i := 0 to High(t.ForeignKeys) do
+    if t.ForeignKeys[i].SQLName = AColName then
+    begin
+      Result := t.ForeignKeys[i];
+      Exit;
+    end;
+end;
+
 { TTable }
 
 constructor TTable.Create(ASQLName, ADisplayName: String);
@@ -147,7 +173,8 @@ initialization
   //Initializing metadata
   Metadata.RegisterTable('Groups', 'Groups', [
     TCol.Create('id', 'Group ID', 100, True),
-    TCol.Create('name', 'Group', 120)], 'GroupsIdGenerator');
+    TCol.Create('name', 'Group', 120),
+    TCol.Create('number', 'Number of students', 100)], 'GroupsIdGenerator');
   Metadata.RegisterTable('Lessons', 'Lessons', [
     TCol.Create('id', 'Lesson ID', 100, True),
     TCol.Create('name', 'Lesson', 450)], 'LessonsIdGenerator');
@@ -158,7 +185,8 @@ initialization
     TCol.Create('middle_name', 'Middle name', 200)], 'TeachersIdGenerator');
   Metadata.RegisterTable('Classrooms', 'Classrooms', [
     TCol.Create('id', 'Classroom ID', 120, True),
-    TCol.Create('name', 'Classroom', 110)], 'ClassroomsIdGenerator');
+    TCol.Create('name', 'Classroom', 110),
+    TCol.Create('capacity', 'Capacity', 100)], 'ClassroomsIdGenerator');
   Metadata.RegisterTable('Lessons_Times', 'Lesson Times', [
     TCol.Create('id', 'Lesson time ID', 130, True),
     TCol.Create('begin_', 'Starts at', 100),

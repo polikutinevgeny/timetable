@@ -5,9 +5,10 @@ unit UTimetableWindow;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids,
-  LCLIntf, LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, UQuery,
-  UMetadata, sqldb, UFilters, math, UDirectoryWindow, UCardWindow, UDB, UNotification;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, LCLIntf,
+  LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, Menus, UQuery,
+  UMetadata, sqldb, UFilters, math, UDirectoryWindow, UCardWindow, UDB,
+  UNotification, UConflictTreeWindow, UConflicts;
 
 type
 
@@ -23,6 +24,7 @@ type
     HorizontalLbl: TLabel;
     FieldSelectionLbl: TLabel;
     NameSelelctionLbl: TLabel;
+    ShowConflictsBtn: TSpeedButton;
     Splitter: TSplitter;
     UtilitySQLQuery: TSQLQuery;
     VerticalLbl: TLabel;
@@ -43,6 +45,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure HideEmptyCBChange(Sender: TObject);
     procedure HorizontalCBChange(Sender: TObject);
+    procedure ShowConflictsBtnClick(Sender: TObject);
     procedure TimetableDGDblClick(Sender: TObject);
     procedure TimetableDGDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -68,11 +71,13 @@ type
     FRowIDs: TStringArray;
     FData: array of array of array of array of String;
     FIDs: array of array of array of String;
+    FConflicts: array of array of array of TConflictArray;
     FShowAllButton: TRect;
     FAddButton: TRect;
     FDeleteBtns: array of TRect;
     FEditBtns: array of TRect;
     FDragBtns: array of TRect;
+    FConflictBtns: array of array of array of TRect;
     FExpandTriangles: array of array of HRGN;
     FFilters: array of TFilter;
     FRecordHeight: Integer;
@@ -81,6 +86,7 @@ type
     FDeleteImage: TPortableNetworkGraphic;
     FEditImage: TPortableNetworkGraphic;
     FDragImage: TPortableNetworkGraphic;
+    FConflictImage: TPortableNetworkGraphic;
     FTextStyle: TTextStyle;
     FCurrentCell: TPoint;
     FDraggedID: String;
@@ -92,6 +98,8 @@ type
     procedure DrawDragBtn(ALeft: Integer; ATop: Integer);
     procedure DrawEditBtn(ALeft: Integer; ATop: Integer);
     procedure DrawRemoveBtn(ALeft: Integer; ATop: Integer);
+    procedure DrawConflictBtn(ALeft: Integer; ATop: Integer; aRow: Integer;
+      aCol: Integer; aNum: Integer);
     procedure Expand(ARow: Integer; ACol: Integer);
     procedure OpenAsDirectory(ARow: Integer; ACol: Integer);
     procedure AddRecord(ARow: Integer; ACol: Integer);
@@ -106,6 +114,7 @@ type
     procedure SetupGrid;
     procedure SelectData;
     procedure UpdateData;
+    procedure ShowConflicts(ARow: Integer; ACol: Integer; AIndex: Integer);
   public
   end;
 
@@ -190,6 +199,11 @@ begin
               DrawRemoveBtn(aRect.Left - ButtonSize,
                 aRect.Top + FRecordHeight * i + ButtonSize * 2);
             end;
+          if Length(FConflicts[aRow - 1][aCol - 1][i]) > 0 then
+            DrawConflictBtn(aRect.Left - ButtonSize,
+              aRect.Top + FRecordHeight * i + ButtonSize * 3, aRow, aCol, i)
+          else
+            FConflictBtns[aRow][aCol][i] := Rect(0, 0, 0, 0);
         end;
         if (w > ColWidths[aCol] - ButtonSize * 2 - BorderMargin) or
           (Length(FData[aRow - 1][aCol - 1]) * FRecordHeight > RowHeights[aRow])
@@ -240,7 +254,7 @@ end;
 
 procedure TTimetableWindow.TimetableDGMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-var col, row: Integer;
+var col, row, i: Integer;
 begin
   TimetableDG.MouseToCell(X, Y, col, row);
   if (col <> FCurrentCell.x) or (row <> FCurrentCell.y) then
@@ -250,6 +264,14 @@ begin
     FCurrentCell.y := row;
     TimetableDG.InvalidateCell(FCurrentCell.x, FCurrentCell.y);
   end;
+  for i := 0 to High(FConflictBtns[row][col]) do
+    if PtInRect(FConflictBtns[row][col][i], Point(X, Y)) then
+    begin
+      Hint := IntToStr(Length(FConflicts[row - 1][col - 1][i]));
+      ShowHint := True;
+      Exit;
+    end;
+  ShowHint := False;
 end;
 
 procedure TTimetableWindow.TimetableDGMouseUp(Sender: TObject;
@@ -277,6 +299,11 @@ begin
       begin
         DeleteRecord(row, col, i);
         break;
+      end
+      else if PtInRect(FConflictBtns[row][col][i], Point(X, Y)) then
+      begin
+        ShowConflicts(row, col, i);
+        Break;
       end;
 end;
 
@@ -334,12 +361,16 @@ end;
 procedure TTimetableWindow.FillData(var fc: TBooleanArray; var fr: TBooleanArray);
 var
   i, j, k, c: Integer;
-  t : ^String;
+  t: array of array of String;
 begin
   SetLength(FData, 0, 0, 0);
   SetLength(FIDs, 0, 0, 0);
+  SetLength(FConflicts, 0, 0, 0);
+  SetLength(FConflictBtns, 0, 0);
   SetLength(FData, Length(FRows), Length(FCols));
   SetLength(FIDs, Length(FRows), Length(FCols));
+  SetLength(FConflicts, Length(FRows), Length(FCols));
+  SetLength(FConflictBtns, Length(FRows) + 1, Length(FCols) + 1);
   SetLength(fr, Length(FRows));
   for i := 0 to High(fr) do
     fr[i] := False;
@@ -349,29 +380,34 @@ begin
   SQLQuery.First;
   for i := 0 to High(FRows) do
     for j := 0 to High(FCols) do
+    begin
+      t := FData[i][j];
       while (not SQLQuery.EOF) and
         (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
         (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
       begin
         fr[i] := True;
         fc[j] := True;
-        SetLength(FData[i][j], Length(FData[i][j]) + 1);
+        SetLength(t, Length(t) + 1);
         SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
+        SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
+        SetLength(FConflictBtns[i + 1][j + 1], Length(FConflictBtns[i + 1][j + 1]) + 1);
         FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
+        FConflicts[i][j][High(FConflicts[i][j])] :=
+          ConflictTypesContainer.GetConflicts(FIDs[i][j][High(FIDs[i][j])]);
         for k := 3 to SQLQuery.FieldCount - 1 do
           if DisplayedFieldsCLB.Checked[k - 3] then
           begin
-            SetLength(FData[i][j][High(FData[i][j])],
-              Length(FData[i][j][High(FData[i][j])]) + 1);
-            {Get pointer to the string we will put data into}
-            t := @FData[i][j][High(FData[i][j])][High(FData[i][j][High(FData[i][j])])];
-            t^ := '';
+            SetLength(t[High(t)], Length(t[High(t)]) + 1);
+            t[High(t)][High(t[High(t)])] := '';
             if DisplayedNamesCLB.Checked[k - 3] then
-              t^ += SQLQuery.Fields[k].DisplayName + ': ';
-            t^ += SQLQuery.Fields[k].AsString;
+              t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].DisplayName + ': ';
+            t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].AsString;
           end;
         SQLQuery.Next;
       end;
+      FData[i][j] := t;
+    end;
   c := 0;
   for k := 3 to SQLQuery.FieldCount - 1 do
     if DisplayedFieldsCLB.Checked[k - 3] then
@@ -430,6 +466,14 @@ begin
   SetLength(FDeleteBtns, Length(FDeleteBtns) + 1);
   FDeleteBtns[High(FDeleteBtns)] := Rect(ALeft, ATop,
     ALeft + ButtonSize, ATop + ButtonSize);
+end;
+
+procedure TTimetableWindow.DrawConflictBtn(ALeft: Integer; ATop: Integer;
+  aRow: Integer; aCol: Integer; aNum: Integer);
+begin
+  TimetableDG.Canvas.Draw(ALeft, ATop, FConflictImage);
+  FConflictBtns[aRow][aCol][aNum] :=
+    Rect(ALeft, ATop, ALeft + ButtonSize, ATop + ButtonSize);
 end;
 
 procedure TTimetableWindow.Expand(ARow: Integer; ACol: Integer);
@@ -621,9 +665,17 @@ begin
   TimetableDG.Invalidate;
 end;
 
+procedure TTimetableWindow.ShowConflicts(ARow: Integer; ACol: Integer;
+  AIndex: Integer);
+begin
+  ConflictTreeWindow.Show;
+  ConflictTreeWindow.Mark(FConflicts[ARow - 1][ACol - 1][AIndex]);
+end;
+
 procedure TTimetableWindow.SetupData(GetData: Boolean);
 var fr, fc: array of Boolean;
 begin
+  ConflictTypesContainer.RefreshConflicts;
   if GetData then
     SelectData;
   FillData(fc, fr);
@@ -667,6 +719,8 @@ begin
   FEditImage.LoadFromFile('icons/TTEdit.png');
   FDragImage := TPortableNetworkGraphic.Create;
   FDragImage.LoadFromFile('icons/TTDrag.png');
+  FConflictImage := TPortableNetworkGraphic.Create;
+  FConflictImage.LoadFromFile('icons/Conflict.png');
   FCurrentCell.x := 0;
   FCurrentCell.y := 0;
   with FTextStyle do
@@ -694,6 +748,11 @@ end;
 procedure TTimetableWindow.HorizontalCBChange(Sender: TObject);
 begin
   UpdateStatus;
+end;
+
+procedure TTimetableWindow.ShowConflictsBtnClick(Sender: TObject);
+begin
+  ConflictTreeWindow.Show;
 end;
 
 procedure TTimetableWindow.TimetableDGDblClick(Sender: TObject);

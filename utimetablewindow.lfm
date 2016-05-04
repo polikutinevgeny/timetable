@@ -1,7 +1,7 @@
 object TimetableWindow: TTimetableWindow
-  Left = 635
+  Left = 357
   Height = 755
-  Top = 95
+  Top = 94
   Width = 1349
   Caption = 'Timetable'
   ClientHeight = 755
@@ -62,6 +62,15 @@ object TimetableWindow: TTimetableWindow
       Width = 86
       Caption = 'Horizontal:'
       ParentColor = False
+    end
+    object ShowConflictsBtn: TSpeedButton
+      Left = 728
+      Height = 33
+      Top = 8
+      Width = 143
+      Caption = 'Show conflicts'
+      Flat = True
+      OnClick = ShowConflictsBtnClick
     end
   end
   object FilterSB: TScrollBox

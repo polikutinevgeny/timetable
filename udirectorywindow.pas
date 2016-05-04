@@ -219,10 +219,11 @@ begin
 end;
 
 procedure TDirectoryForm.SetHiddenFilters(AFilters: array of TFilter);
+var i: Integer;
 begin
-  SetLength(FFilters, 2);
-  FFilters[0] := AFilters[0];
-  FFilters[1] := AFilters[1];
+  SetLength(FFilters, Length(AFilters));
+  for i := 0 to High(AFilters) do
+    FFilters[i] := AFilters[i];
 end;
 
 procedure TDirectoryForm.AddFilterBtnClick(Sender: TObject);

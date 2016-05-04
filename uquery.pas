@@ -72,9 +72,132 @@ type
       function UpdateQueryAsText: String;
   end;
 
+  { TBaseConflictQuery }
+
+  TBaseConflictQuery = class abstract(TBaseViewingQuery)
+    private
+      function GetSelectAsText: String;
+    public
+      function DisplayQueryAsText(AIDs: TStringArray): String;
+  end;
+
+  { TValueConflictQuery }
+
+  TValueConflictQuery = class(TBaseConflictQuery)
+    public
+      class function GetSelectQuery(ATable: TTable; AEqual: TColArray;
+        ANotEqual: TColArray): String;
+  end;
+
+  { TCapacityConflictQuery }
+
+  TCapacityConflictQuery = class(TBaseConflictQuery)
+    public
+      class function GetSelectQuery(ATable: TTable; AEqual: TColArray;
+        ACapacityField: TCol; ACapacityFieldRef: TCol;
+        ACapacityConsumingField: TCol; ACapacityConsumingFieldRef: TCol): String;
+  end;
+
 const SortDirection: array[0..1] of String = ('DESC', 'ASC');
 
 implementation
+
+{ TBaseConflictQuery }
+
+function TBaseConflictQuery.GetSelectAsText: String;
+var i: Integer;
+begin
+  Result := Format('SELECT %s.%s AS "%s", ', [
+    FTables[0].SQLName, FTables[0].PrimaryKey.SQLName,
+    FTables[0].PrimaryKey.DisplayName]);
+  for i := 0 to High(FCols) - 1 do
+  begin
+    if FCols[i].Real then
+      Result += FCols[i].Table.SQLName + '.';
+    Result += Format('%s AS "%s", ', [FCols[i].SQLName, FCols[i].DisplayName]);
+  end;
+  if FCols[High(FCols)].Real then
+    Result += FCols[High(FCols)].Table.SQLName;
+  Result += Format('%s AS "%s" ', [FCols[High(FCols)].SQLName,
+    FCols[High(FCols)].DisplayName]);
+end;
+
+function TBaseConflictQuery.DisplayQueryAsText(AIDs: TStringArray): String;
+var i: Integer;
+begin
+  Result := Format('%s %s WHERE %s.%s IN(', [
+    GetSelectAsText, GetFromAsText, FTables[0].SQLName, FTables[0].PrimaryKey.SQLName]);
+  for i := 0 to High(AIDs) - 1 do
+    Result += AIDs[i] + ', ';
+  Result += AIDs[High(AIDs)] + ')';
+end;
+
+{ TCapacityConflictQuery }
+
+class function TCapacityConflictQuery.GetSelectQuery(ATable: TTable;
+  AEqual: TColArray; ACapacityField: TCol; ACapacityFieldRef: TCol;
+  ACapacityConsumingField: TCol; ACapacityConsumingFieldRef: TCol): String;
+var i: Integer;
+begin
+  Result := Format('SELECT %s.%s AS ID, ', [ATable.SQLName, ATable.PrimaryKey.SQLName]);
+  for i := 0 to High(ATable.Cols) do
+    Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.Cols[i].SQLName,
+      ATable.Cols[i].DisplayName]);
+  for i := 0 to High(ATable.ForeignKeys) do
+    Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.ForeignKeys[i].SQLName,
+      ATable.ForeignKeys[i].DisplayName]);
+  Result += Format('%s.%s AS "%s", ', [ACapacityField.Table.SQLName,
+    ACapacityField.SQLName, ACapacityField.DisplayName]);
+  Result += Format('%s.%s AS "%s" ', [ACapacityConsumingField.Table.SQLName,
+    ACapacityConsumingField.SQLName, ACapacityConsumingField.DisplayName]);
+  Result += Format('FROM %s ', [ATable.SQLName]);
+  Result += Format('INNER JOIN %s ON %s.%s = %s.%s ', [
+    ACapacityField.Table.SQLName, ACapacityField.Table.SQLName,
+    ACapacityField.Table.PrimaryKey.SQLName, ATable.SQLName,
+    ACapacityFieldRef.SQLName]);
+  Result += Format('INNER JOIN %s ON %s.%s = %s.%s ', [
+    ACapacityConsumingField.Table.SQLName, ACapacityConsumingField.Table.SQLName,
+    ACapacityConsumingField.Table.PrimaryKey.SQLName, ATable.SQLName,
+    ACapacityConsumingFieldRef.SQLName]);
+  Result += 'ORDER BY ';
+  for i := 0 to High(AEqual) - 1 do
+    Result += Format('"%s", ', [AEqual[i].DisplayName]);
+  if Length(AEqual) > 0 then
+    Result += Format('"%s" ', [AEqual[High(AEqual)].DisplayName]);
+end;
+
+{ TValueConflictQuery }
+
+class function TValueConflictQuery.GetSelectQuery(ATable: TTable; AEqual: TColArray;
+  ANotEqual: TColArray): String;
+var i: Integer;
+begin
+  Result := Format('SELECT %s.%s AS ID, ', [ATable.SQLName, ATable.PrimaryKey.SQLName]);
+  for i := 0 to High(ATable.Cols) - 1 do
+    Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.Cols[i].SQLName,
+      ATable.Cols[i].DisplayName]);
+  if Length(ATable.Cols) > 0 then
+    Result += Format('%s.%s AS "%s" ', [ATable.SQLName,
+      ATable.Cols[High(ATable.Cols)].SQLName, ATable.Cols[High(ATable.Cols)].DisplayName]);
+  for i := 0 to High(ATable.ForeignKeys) - 1 do
+    Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.ForeignKeys[i].SQLName,
+      ATable.ForeignKeys[i].DisplayName]);
+  if Length(ATable.ForeignKeys) > 0 then
+    Result += Format('%s.%s AS "%s" ', [ATable.SQLName,
+      ATable.ForeignKeys[High(ATable.ForeignKeys)].SQLName,
+      ATable.ForeignKeys[High(ATable.ForeignKeys)].DisplayName]);
+  Result += Format('FROM %s ORDER BY ', [ATable.SQLName]);
+  for i := 0 to High(AEqual) - 1 do
+    Result += Format('"%s", ', [AEqual[i].DisplayName]);
+  if Length(AEqual) > 0 then
+    Result += Format('"%s" ', [AEqual[High(AEqual)].DisplayName]);
+  if Length(ANotEqual) > 0 then
+    Result += ', ';
+  for i := 0 to High(ANotEqual) - 1 do
+    Result += Format('"%s", ', [ANotEqual[i].DisplayName]);
+  if Length(ANotEqual) > 0 then
+    Result += Format('"%s" ', [ANotEqual[High(ANotEqual)].DisplayName]);
+end;
 
 { TBaseViewingQuery }
 
@@ -106,9 +229,13 @@ begin
   Result := 'WHERE ';
   for i := 0 to High(FFilters) do
   begin
-    Result += Format('%s.%s %s %s ', [
+    Result += Format('%s.%s %s ', [
       FFilters[i].Column.Table.SQLName, FFilters[i].Column.SQLName,
-      FFilters[i].Action, ':p' + IntToStr(i)]);
+      FFilters[i].Action]);
+    if FFilters[i].Action = 'IN' then
+      Result += Format('(SELECT * FROM SPLIT_STRING( :p%d ))', [i])
+    else
+      Result += Format(':p%d', [i]);
     if i < High(FFilters) then
       Result += 'AND ';
   end;
@@ -162,7 +289,7 @@ begin
   for i := 0 to High(FCols) - 1 do
   begin
     if FCols[i].Real then
-      Result += FCols[i].Table.SQLName;
+      Result += FCols[i].Table.SQLName + '.';
     Result += Format('%s AS "%s", ', [FCols[i].SQLName, FCols[i].DisplayName]);
   end;
   if FCols[High(FCols)].Real then

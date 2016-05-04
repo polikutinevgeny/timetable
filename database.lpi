@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="10">
+    <Units Count="13">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -107,6 +107,25 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UTimetableWindow"/>
       </Unit9>
+      <Unit10>
+        <Filename Value="uconflicts.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UConflicts"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="uconflictsdm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ConflictsDM"/>
+        <ResourceBaseClass Value="DataModule"/>
+        <UnitName Value="UConflictsDM"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="uconflicttreewindow.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ConflictTreeWindow"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="UConflictTreeWindow"/>
+      </Unit12>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
