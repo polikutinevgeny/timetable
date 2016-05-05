@@ -101,12 +101,13 @@ type
     procedure DrawConflictBtn(ALeft: Integer; ATop: Integer; aRow: Integer;
       aCol: Integer; aNum: Integer);
     procedure Expand(ARow: Integer; ACol: Integer);
-    procedure FillRecord(j: Integer; i: Integer; var fr: TBooleanArray; var fc: TBooleanArray);
+    procedure FillRecord(j: Integer; i: Integer; var AFilledRows: TBooleanArray;
+      var AFilledCols: TBooleanArray);
     procedure OpenAsDirectory(ARow: Integer; ACol: Integer);
     procedure AddRecord(ARow: Integer; ACol: Integer);
     procedure EditRecord(ARow: Integer; ACol: Integer; AIndex: Integer);
     procedure DeleteRecord(ARow: Integer; ACol: Integer; AIndex: Integer);
-    procedure PrintOutRecords(var w: Integer; aRect: TRect;
+    procedure PrintOutRecords(var AWidth: Integer; aRect: TRect;
       aRow: Integer; aCol: Integer);
     procedure SetupCBs;
     procedure UpdateStatus;
@@ -426,7 +427,7 @@ begin
 end;
 
 procedure TTimetableWindow.FillRecord(j: Integer; i: Integer;
-  var fr: TBooleanArray; var fc: TBooleanArray);
+  var AFilledRows: TBooleanArray; var AFilledCols: TBooleanArray);
 var
   t: array of array of String;
   k : Integer;
@@ -436,8 +437,8 @@ begin
     (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
     (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
   begin
-    fr[i] := True;
-    fc[j] := True;
+    AFilledRows[i] := True;
+    AFilledCols[j] := True;
     SetLength(t, Length(t) + 1);
     SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
     SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
@@ -527,7 +528,7 @@ begin
   OnDataUpdate;
 end;
 
-procedure TTimetableWindow.PrintOutRecords(var w: Integer; aRect: TRect;
+procedure TTimetableWindow.PrintOutRecords(var AWidth: Integer; aRect: TRect;
   aRow: Integer; aCol: Integer);
 var
   full: Boolean;
@@ -541,7 +542,7 @@ begin
     begin
       if full then
         break;
-      w := 0;
+      AWidth := 0;
       for j := 0 to High(FData[aRow - 1][aCol - 1][i]) do
       begin
         if FRecordHeight * i + Canvas.TextHeight('Hlg') * (j + 1) > RowHeights[aRow]
@@ -554,7 +555,7 @@ begin
           aRect.Top + BorderMargin + FRecordHeight * i +
           Canvas.TextHeight('Hlg') * j, FData[aRow - 1][aCol - 1][i][j],
           FTextStyle);
-        w := max(w, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
+        AWidth := max(AWidth, Canvas.TextWidth(FData[aRow - 1][aCol - 1][i][j]));
       end;
       Canvas.Pen.Color := clBlack;
       if (i <> 0) and (FRecordHeight <> 0) then

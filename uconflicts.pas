@@ -101,15 +101,6 @@ begin
     end;
     t2 := ATreeView.Items.AddChild(t1, s);
     t2.Data := Conflicts[j];
-    for k := 0 to High(AMarkedConflicts) do
-      if Conflicts[j] = AMarkedConflicts[k] then
-      begin
-        t2.ImageIndex := 0;
-        t2.Parent.ImageIndex := 0;
-        Break;
-      end;
-    t2.Parent.SelectedIndex := t2.Parent.ImageIndex;
-    t2.SelectedIndex := t2.ImageIndex;
     while not ConflictsDM.SQLQuery.EOF do
     begin
       s := '';
@@ -122,6 +113,17 @@ begin
       t3.Data := @FIDs[High(FIDs)];
       ConflictsDM.SQLQuery.Next;
     end;
+    for k := 0 to High(AMarkedConflicts) do
+      if Conflicts[j] = AMarkedConflicts[k] then
+      begin
+        t2.ImageIndex := 0;
+        t2.Parent.ImageIndex := 0;
+        t2.Parent.Expand(False);
+        t2.Expand(False);
+        Break;
+      end;
+    t2.Parent.SelectedIndex := t2.Parent.ImageIndex;
+    t2.SelectedIndex := t2.ImageIndex;
   end;
 end;
 
