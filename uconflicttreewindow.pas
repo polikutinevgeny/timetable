@@ -75,15 +75,14 @@ begin
   begin
     if TreeView.Selected.Level = 2 then
     begin
-      t := CheckCardExistence(Metadata.TimetableTable,
-        StrToInt(PString(TreeView.Selected.Data)^));
+      t := CheckCardExistence(Metadata.TimetableTable, Integer(TreeView.Selected.Data));
       if t <> nil then
       begin
         t.BringToFront;
         Exit;
       end;
       t := TCardWindow.Create(Application);
-      t.Setup(Metadata.TimetableTable, StrToInt(PString(TreeView.Selected.Data)^), cmEdit);
+      t.Setup(Metadata.TimetableTable, Integer(TreeView.Selected.Data), cmEdit);
       RegisterCard(t);
       t.Show;
     end

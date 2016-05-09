@@ -25,7 +25,6 @@ type
   TBaseConflictType = class abstract
     private
       FQuery: TBaseConflictQuery;
-      FIDs: TStringArray;
     public
       EqualFields: TColArray;
       Name: String;
@@ -85,7 +84,6 @@ var
   t1, t2, t3: TTreeNode;
   s: String;
 begin
-  SetLength(FIDs, 0);
   t1 := ATreeView.Items.Add(nil, Name);
   t1.SelectedIndex := t1.ImageIndex;
   for j := 0 to High(Conflicts) do
@@ -108,9 +106,7 @@ begin
         if ConflictsDM.SQLQuery.Fields[k].Tag = 0 then
           s += ConflictsDM.SQLQuery.Fields[k].AsString + ', ';
       t3 := ATreeView.Items.AddChild(t2, s);
-      SetLength(FIDs, Length(FIDs) + 1);
-      FIDs[High(FIDs)] := ConflictsDM.SQLQuery.Fields[0].AsString;
-      t3.Data := @FIDs[High(FIDs)];
+      t3.Data := Pointer(ConflictsDM.SQLQuery.Fields[0].AsInteger);
       ConflictsDM.SQLQuery.Next;
     end;
     for k := 0 to High(AMarkedConflicts) do
