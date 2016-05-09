@@ -235,7 +235,7 @@ begin
     if FFilters[i].Action = 'IN' then
       Result += Format('(SELECT * FROM SPLIT_STRING( :p%d ))', [i])
     else
-      Result += Format(':p%d', [i]);
+      Result += Format(':p%d ', [i]);
     if i < High(FFilters) then
       Result += 'AND ';
   end;

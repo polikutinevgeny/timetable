@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="15">
       <Unit0>
         <Filename Value="database.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -128,6 +128,16 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="UConflictTreeWindow"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="uexcelconstants.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UExcelConstants"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="uexcelexport.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="UExcelExport"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

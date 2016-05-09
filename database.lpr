@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
   UQuery, UCardWindow, UNotification, UTimetableWindow, UConflicts, UConflictsDM,
-  UConflictTreeWindow;
+  UConflictTreeWindow, UExcelConstants, UExcelExport;
 
 {$R *.res}
 

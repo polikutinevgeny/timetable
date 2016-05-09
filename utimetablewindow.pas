@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, LCLIntf,
   LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, Menus, UQuery,
   UMetadata, sqldb, UFilters, math, UDirectoryWindow, UCardWindow, UDB,
-  UNotification, UConflictTreeWindow, UConflicts;
+  UNotification, UConflictTreeWindow, UConflicts, UExcelExport;
 
 type
 
@@ -23,7 +23,12 @@ type
     HideEmptyCB: TCheckBox;
     HorizontalLbl: TLabel;
     FieldSelectionLbl: TLabel;
+    MainMenu: TMainMenu;
+    ExportMI: TMenuItem;
+    ExcelMI: TMenuItem;
+    HTMLMI: TMenuItem;
     NameSelelctionLbl: TLabel;
+    ExportDialog: TSaveDialog;
     ShowConflictsBtn: TSpeedButton;
     Splitter: TSplitter;
     UtilitySQLQuery: TSQLQuery;
@@ -41,6 +46,7 @@ type
     procedure ApplyBtnClick(Sender: TObject);
     procedure DisplayedFieldsCLBClickCheck(Sender: TObject);
     procedure DisplayedNamesCLBClickCheck(Sender: TObject);
+    procedure ExportMIClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure HideEmptyCBChange(Sender: TObject);
@@ -300,10 +306,14 @@ begin
     begin
       FRows[i - k] := FRows[i];
       FData[i - k] := FData[i];
+      FConflicts[i - k] := FConflicts[i];
+      FConflictBtns[i - k + 1] := FConflictBtns[i + 1];
     end;
   end;
   SetLength(FRows, Length(FRows) - k);
   SetLength(FData, Length(FData) - k);
+  SetLength(FConflicts, Length(FConflicts) - k);
+  SetLength(FConflictBtns, Length(FConflictBtns) - k);
   k := 0;
   for i := 0 to High(FCols) do
   begin
@@ -313,12 +323,20 @@ begin
     begin
       FCols[i - k] := FCols[i];
       for j := 0 to High(FRows) do
+      begin
         FData[j][i - k] := FData[j][i];
+        FConflicts[j][i - k] := FConflicts[j][i];
+        FConflictBtns[j + 1][i - k + 1] := FConflictBtns[j + 1][i + 1];
+      end;
     end;
   end;
   SetLength(FCols, Length(FCols) - k);
   if Length(FData) > 0 then
+  begin
     SetLength(FData, Length(FData), Length(FData[0]) - k);
+    SetLength(FConflicts, Length(FConflicts), Length(FConflicts[0]) - k);
+    SetLength(FConflictBtns, Length(FConflictBtns), Length(FConflictBtns[0]) - k);
+  end;
 end;
 
 procedure TTimetableWindow.FillData(var fc: TBooleanArray; var fr: TBooleanArray);
@@ -724,6 +742,14 @@ begin
   UpdateStatus;
 end;
 
+procedure TTimetableWindow.ExportMIClick(Sender: TObject);
+begin
+  ExportDialog.Title := 'Export to ' + TMenuItem(Sender).Caption;
+  if ExportDialog.Execute then
+    ExportTo(WideString(ExportDialog.FileName), FCols, FRows,
+      FData, FFilters, TMenuItem(Sender).Tag);
+end;
+
 procedure TTimetableWindow.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
@@ -747,6 +773,7 @@ begin
   FConflictImage.LoadFromFile('icons/Conflict.png');
   FCurrentCell.x := 0;
   FCurrentCell.y := 0;
+  SetLength(FFilters, 0);
   with FTextStyle do
   begin
     Alignment := taLeftJustify;
