@@ -746,8 +746,12 @@ procedure TTimetableWindow.ExportMIClick(Sender: TObject);
 begin
   ExportDialog.Title := 'Export to ' + TMenuItem(Sender).Caption;
   if ExportDialog.Execute then
+  begin
+    Screen.Cursor := crHourGlass;
     ExportTo(WideString(ExportDialog.FileName), FCols, FRows,
       FData, FFilters, TMenuItem(Sender).Tag);
+  end;
+  Screen.Cursor := crDefault;
 end;
 
 procedure TTimetableWindow.FormClose(Sender: TObject;
