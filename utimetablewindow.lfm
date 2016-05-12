@@ -726,7 +726,6 @@ object TimetableWindow: TTimetableWindow
   end
   object ExportDialog: TSaveDialog
     Title = 'Export'
-    Filter = 'All files|*.*'
     Options = [ofOverwritePrompt, ofEnableSizing, ofViewDetail]
     left = 952
     top = 8

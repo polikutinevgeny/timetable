@@ -8,7 +8,7 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, LCLIntf,
   LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, Menus, UQuery,
   UMetadata, sqldb, UFilters, math, UDirectoryWindow, UCardWindow, UDB,
-  UNotification, UConflictTreeWindow, UConflicts, UExcelExport;
+  UNotification, UConflictTreeWindow, UConflicts, UExcelExport, UExcelConstants;
 
 type
 
@@ -747,6 +747,12 @@ end;
 procedure TTimetableWindow.ExportMIClick(Sender: TObject);
 begin
   ExportDialog.Title := 'Export to ' + TMenuItem(Sender).Caption;
+  case TMenuItem(Sender).Tag of
+    xlHtml:
+      ExportDialog.Filter := 'HTML|*.htm';
+    xlOpenXMLWorkbook:
+      ExportDialog.Filter := 'Excel|*.xlsx';
+  end;
   if ExportDialog.Execute then
   begin
     Screen.Cursor := crHourGlass;
