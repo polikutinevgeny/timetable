@@ -17,9 +17,13 @@ implementation
 procedure ExportTo(AFilename: WideString; ACols: array of String;
   ARows: array of String; AData: TData; AFilters: array of TFilter;
   AFileType: Integer);
+const
+  ColumnWidth = 30;
+  FixedColumnWidth = 20;
+  FixedCellsColorIndex = 15;
+  FixedRowHeight = 15;
 var
-  xlapp: OleVariant;
-  xlworksheet: OleVariant;
+  xlapp, xlworksheet, temp: OleVariant;
   i, j, k, l, currow, height: Integer;
   rec: WideString;
 begin
@@ -31,17 +35,17 @@ begin
     xlapp.Workbooks.Add;
     xlworksheet := xlapp.WorkBooks[1].WorkSheets[1];
     xlworksheet.Name := 'Timetable';
-    xlworksheet.Cells[1, 1].Interior.ColorIndex := 15;
-    xlworksheet.Rows.Rows[1].RowHeight := 15;
-    xlworksheet.Columns.Columns[1].ColumnWidth := 20;
+    xlworksheet.Cells[1, 1].Interior.ColorIndex := FixedCellsColorIndex;
+    xlworksheet.Rows.Rows[1].RowHeight := FixedRowHeight;
+    xlworksheet.Columns.Columns[1].ColumnWidth := FixedColumnWidth;
     xlworksheet.Rows.Rows[1].WrapText := True;
     xlworksheet.Columns.Columns[1].WrapText := True;
     for i := 2 to Length(ACols) + 1 do
     begin
-      xlworksheet.Columns.Columns[i].ColumnWidth := 30;
+      xlworksheet.Columns.Columns[i].ColumnWidth := ColumnWidth;
       xlworksheet.Cells[1, i].Value := WideString(ACols[i - 2]);
       xlworksheet.Cells[1, i].BorderAround(xlContinuous, xlThick, vbBlack);
-      xlworksheet.Cells[1, i].Interior.ColorIndex := 15;
+      xlworksheet.Cells[1, i].Interior.ColorIndex := FixedCellsColorIndex;
       xlworksheet.Cells[1, i].Font.Bold := True;
     end;
     xlapp.ActiveWindow.SplitRow := 1;
@@ -68,24 +72,20 @@ begin
           xlContinuous, xlThin, vbBlack);
         end;
       end;
-      xlworksheet.Range(
+      temp := xlworksheet.Range(
         xlworksheet.Cells[currow, 2],
-        xlworksheet.Cells[currow + height - 1, j + 2]).
-          BorderAround(xlContinuous, xlThin, vbBlack);
-      xlworksheet.Range(
+        xlworksheet.Cells[currow + height - 1, j + 2]);
+      temp.BorderAround(xlContinuous, xlThin, vbBlack);
+      temp.VerticalAlignment := xlTop;
+      temp := xlworksheet.Range(
         xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + height - 1, j + 2]).
-          VerticalAlignment := xlTop;
-      xlworksheet.Range(
-        xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + height - 1, 1]).Merge;
+        xlworksheet.Cells[currow + height - 1, 1]);
+      temp.Merge;
+      temp.VerticalAlignment := xlTop;
+      temp.BorderAround(xlContinuous, xlThick, vbBlack);
       xlworksheet.Cells[currow, 1].Value := WideString(ARows[i]);
       xlworksheet.Cells[currow, 1].Font.Bold := True;
-      xlworksheet.Range(
-        xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + height - 1, 1]).
-        BorderAround(xlContinuous, xlThick, vbBlack);
-      xlworksheet.Cells[currow, 1].Interior.ColorIndex := 15;
+      xlworksheet.Cells[currow, 1].Interior.ColorIndex := FixedCellsColorIndex;
       currow += height;
     end;
     currow += 1;
@@ -100,16 +100,12 @@ begin
         xlworksheet.Cells[currow + i, 2].BorderAround(
           xlContinuous, xlThin, vbBlack);
       end;
-      xlworksheet.Range(
+      temp := xlworksheet.Range(
         xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + High(AFilters), 1]).Merge;
-      xlworksheet.Range(
-        xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + High(AFilters), 1]).BorderAround(
-          xlContinuous, xlThick, vbBlack);
-      xlworksheet.Range(
-        xlworksheet.Cells[currow, 1],
-        xlworksheet.Cells[currow + High(AFilters), 1]).VerticalAlignment := xlTop;
+        xlworksheet.Cells[currow + High(AFilters), 1]);
+      temp.Merge;
+      temp.BorderAround(xlContinuous, xlThick, vbBlack);
+      temp.VerticalAlignment := xlTop;
       xlworksheet.Range(
         xlworksheet.Cells[currow, 2],
         xlworksheet.Cells[currow + High(AFilters), 2]).BorderAround(

@@ -290,6 +290,7 @@ end;
 procedure TTimetableWindow.UpdateStatus;
 begin
   ApplyBtn.Enabled := True;
+  ExportMI.Enabled := False;
 end;
 
 procedure TTimetableWindow.DeleteEmpty(const fc: TBooleanArray;
@@ -729,6 +730,7 @@ end;
 procedure TTimetableWindow.ApplyBtnClick(Sender: TObject);
 begin
   ApplyBtn.Enabled := False;
+  ExportMI.Enabled := True;
   SetupGrid;
 end;
 
@@ -831,6 +833,7 @@ end;
 procedure TTimetableWindow.AddFilterBtnClick(Sender: TObject);
 begin
   ApplyBtn.Enabled := True;
+  ExportMI.Enabled := False;
   SetLength(FFilters, Length(FFilters) + 1);
   FFilters[High(FFilters)] := TFilter.Create(
     FilterSB, Metadata.TimetableTable,
