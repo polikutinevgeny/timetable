@@ -9,9 +9,10 @@ uses
 
 type
 
-  TIDDatePair = record
+  TIDDateData = record
     ID: Integer;
     EndDate: TDateTime;
+    Data: array of String;
   end;
 
   TIDDateCapacity = record
@@ -32,24 +33,29 @@ type
       destructor Destroy; override;
   end;
 
-  TIDDateBinaryHeap = specialize TBinaryHeap<TIDDatePair>;
+  TIDDateBinaryHeap = specialize TBinaryHeap<TIDDateData>;
   TIDDateCapacityBinaryHeap = specialize TBinaryHeap<TIDDateCapacity>;
 
-function IDDatePair(AID: Integer; ADate: TDateTime): TIDDatePair;
-operator < (const a, b: TIDDatePair): Boolean;
+function IDDateData(AID: Integer; ADate: TDateTime; AData: array of String): TIDDateData;
+operator < (const a, b: TIDDateData): Boolean;
 
 function IDDateCapacity(AID: Integer; ADate: TDateTime; ACapacity: Integer): TIDDateCapacity;
 operator < (const a, b: TIDDateCapacity): Boolean;
 
 implementation
 
-function IDDatePair(AID: Integer; ADate: TDateTime): TIDDatePair;
+function IDDateData(AID: Integer; ADate: TDateTime; AData: array of String
+  ): TIDDateData;
+var i: Integer;
 begin
   Result.EndDate := ADate;
   Result.ID := AID;
+  SetLength(Result.Data, Length(AData));
+  for i := 0 to High(AData) do
+    Result.Data[i] := AData[i];
 end;
 
-operator < (const a, b: TIDDatePair): Boolean;
+operator < (const a, b: TIDDateData): Boolean;
 begin
   Result := a.EndDate < b.EndDate;
 end;

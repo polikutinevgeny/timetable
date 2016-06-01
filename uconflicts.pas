@@ -311,7 +311,7 @@ end;
 procedure TValueConflictType.RefreshConflicts;
 var
   i: Integer;
-  cvs: TStringArray;
+  cvs, temp: TStringArray;
   ccids: array of Integer;
   eqok, neqok: Boolean;
   heap: TIDDateBinaryHeap;
@@ -329,6 +329,27 @@ var
     end;
   end;
 
+  procedure CheckHeap;
+  var j, k: Integer;
+  begin
+    neqok := False;
+    if Length(heap.Values) < 1 then
+      Exit;
+    for j := 0 to High(cvs) do
+      cvs[j] := heap.Values[0].Data[j];
+    for j := 0 to High(heap.Values) do
+    begin
+      for k := 0 to High(cvs) do
+        if cvs[i] <> heap.Values[j].Data[i] then
+        begin
+          neqok := True;
+          Break;
+        end;
+      if neqok then
+        Break;
+    end;
+  end;
+
 begin
   heap := TIDDateBinaryHeap.Create();
   SetLength(Conflicts, 0);
@@ -340,14 +361,17 @@ begin
     Open;
     First;
     SetLength(cvs, Length(EqualFields) + Length(NotEqualFields));
+    SetLength(temp, Length(NotEqualFields));
     SetLength(ccids, 1);
     for i := 0 to High(EqualFields) do
       cvs[i] := FieldByName(EqualFields[i].DisplayName).AsString;
     for i := 0 to High(NotEqualFields) do
       cvs[i + Length(EqualFields)] :=
         FieldByName(NotEqualFields[i].DisplayName).AsString;
-    heap.Push(IDDatePair(FieldByName('ID').AsInteger,
-      FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime));
+    for i := 0 to High(NotEqualFields) do
+      temp[i] := FieldByName(NotEqualFields[i].DisplayName).AsString;
+    heap.Push(IDDateData(FieldByName('ID').AsInteger,
+      FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime, temp));
     Next;
     eqok := True;
     neqok := False;
@@ -376,6 +400,7 @@ begin
             (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime < heap.Values[0].EndDate)
           do
             heap.Pop;
+          CheckHeap;
         end;
         if EOF then
         begin
@@ -397,8 +422,10 @@ begin
         eqok := True;
         neqok := False;
       end;
-      heap.Push(IDDatePair(FieldByName('ID').AsInteger,
-        FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime));
+      for i := 0 to High(NotEqualFields) do
+        temp[i] := FieldByName(NotEqualFields[i].DisplayName).AsString;
+      heap.Push(IDDateData(FieldByName('ID').AsInteger,
+        FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime, temp));
       Next;
     end;
   end;
