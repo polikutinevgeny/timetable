@@ -147,7 +147,7 @@ begin
   SQLQuery.Close;
   FQuery.Free;
   FQuery := TDirectoryQuery.Create(CurrentTable, FFilters,
-    TDirectoryQuery.GetFullColList(CurrentTable));
+    TDirectoryQuery.GetFullColList(CurrentTable, True));
   try
     if sorted then
       SQLQuery.SQL.Text := FQuery.SelectQueryAsText(s, SortDirection[t])

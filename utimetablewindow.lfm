@@ -1,7 +1,7 @@
 object TimetableWindow: TTimetableWindow
-  Left = 357
+  Left = 601
   Height = 755
-  Top = 94
+  Top = 62
   Width = 1349
   Caption = 'Timetable'
   ClientHeight = 725
@@ -82,10 +82,10 @@ object TimetableWindow: TTimetableWindow
     AnchorSideRight.Control = RowColControlPanel
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 74
+    Left = 274
     Height = 153
     Top = 572
-    Width = 830
+    Width = 630
     HorzScrollBar.Page = 1
     VertScrollBar.Page = 1
     Anchors = [akTop, akLeft, akRight, akBottom]
@@ -157,7 +157,7 @@ object TimetableWindow: TTimetableWindow
     AnchorSideTop.Side = asrBottom
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 0
+    Left = 200
     Height = 153
     Top = 572
     Width = 74
@@ -641,16 +641,17 @@ object TimetableWindow: TTimetableWindow
     end
   end
   object TimetableDG: TDrawGrid
-    AnchorSideLeft.Control = Owner
+    AnchorSideLeft.Control = DatePnl
+    AnchorSideLeft.Side = asrBottom
     AnchorSideTop.Control = OptionsPanel
     AnchorSideTop.Side = asrBottom
     AnchorSideRight.Control = Owner
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Splitter
-    Left = 0
+    Left = 200
     Height = 513
     Top = 48
-    Width = 1349
+    Width = 1149
     Align = alCustom
     Anchors = [akTop, akLeft, akRight, akBottom]
     AutoAdvance = aaDown
@@ -686,6 +687,226 @@ object TimetableWindow: TTimetableWindow
     Align = alCustom
     Anchors = [akLeft, akRight]
     ResizeAnchor = akBottom
+  end
+  object DatePnl: TPanel
+    Left = 0
+    Height = 677
+    Top = 48
+    Width = 200
+    Align = alLeft
+    ClientHeight = 677
+    ClientWidth = 200
+    TabOrder = 6
+    object StartDateDE: TDateEdit
+      Left = 8
+      Height = 33
+      Top = 32
+      Width = 136
+      CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames, dsStartMonday]
+      OKCaption = 'OK'
+      CancelCaption = 'Cancel'
+      DateOrder = doNone
+      DateFormat = 'dd.mm.yyyy'
+      ButtonWidth = 23
+      NumGlyphs = 1
+      Flat = True
+      MaxLength = 0
+      OnChange = StartDateDEChange
+      TabOrder = 0
+    end
+    object DateStartLbl: TLabel
+      Left = 8
+      Height = 25
+      Top = 8
+      Width = 76
+      Caption = 'Start date'
+      ParentColor = False
+    end
+    object EndDateLbl: TLabel
+      Left = 8
+      Height = 25
+      Top = 224
+      Width = 70
+      Caption = 'End date'
+      ParentColor = False
+    end
+    object EndDateDE: TDateEdit
+      Left = 8
+      Height = 33
+      Top = 248
+      Width = 136
+      CalendarDisplaySettings = [dsShowHeadings, dsShowDayNames]
+      OKCaption = 'OK'
+      CancelCaption = 'Cancel'
+      DateOrder = doNone
+      DateFormat = 'dd.mm.yyyy'
+      ButtonWidth = 23
+      NumGlyphs = 1
+      Flat = True
+      MaxLength = 0
+      OnChange = EndDateDEChange
+      TabOrder = 1
+    end
+    object StartDayIncBtn: TSpeedButton
+      Tag = 1
+      Left = 8
+      Height = 32
+      Top = 72
+      Width = 88
+      Caption = '+1 day'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartDayDecBtn: TSpeedButton
+      Tag = -1
+      Left = 104
+      Height = 32
+      Top = 72
+      Width = 88
+      Caption = '-1 day'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartWeekIncBtn: TSpeedButton
+      Tag = 7
+      Left = 8
+      Height = 32
+      Top = 112
+      Width = 88
+      Caption = '+1 week'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartYearIncBtn: TSpeedButton
+      Tag = 365
+      Left = 8
+      Height = 32
+      Top = 192
+      Width = 88
+      Caption = '+1 year'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartMonthIncBtn: TSpeedButton
+      Tag = 30
+      Left = 8
+      Height = 32
+      Top = 152
+      Width = 88
+      Caption = '+1 month'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartMonthDecBtn: TSpeedButton
+      Tag = -30
+      Left = 104
+      Height = 32
+      Top = 152
+      Width = 88
+      Caption = '-1 month'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartWeekDecBtn: TSpeedButton
+      Tag = -7
+      Left = 104
+      Height = 32
+      Top = 112
+      Width = 88
+      Caption = '-1 week'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object StartYearDecBtn: TSpeedButton
+      Tag = -365
+      Left = 104
+      Height = 32
+      Top = 192
+      Width = 88
+      Caption = '-1 year'
+      Flat = True
+      OnClick = StartDateEditBtnClick
+    end
+    object EndDayIncBtn: TSpeedButton
+      Tag = 1
+      Left = 8
+      Height = 32
+      Top = 288
+      Width = 88
+      Caption = '+1 day'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndDayDecBtn: TSpeedButton
+      Tag = -1
+      Left = 104
+      Height = 32
+      Top = 288
+      Width = 88
+      Caption = '-1 day'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndWeekIncBtn: TSpeedButton
+      Tag = 7
+      Left = 8
+      Height = 32
+      Top = 328
+      Width = 88
+      Caption = '+1 week'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndWeekDecBtn: TSpeedButton
+      Tag = -7
+      Left = 104
+      Height = 32
+      Top = 328
+      Width = 88
+      Caption = '-1 week'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndMonthIncBtn: TSpeedButton
+      Tag = 30
+      Left = 8
+      Height = 32
+      Top = 368
+      Width = 88
+      Caption = '+1 month'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndMonthDecBtn: TSpeedButton
+      Tag = -30
+      Left = 104
+      Height = 32
+      Top = 368
+      Width = 88
+      Caption = '-1 month'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndYearIncBtn: TSpeedButton
+      Tag = 365
+      Left = 8
+      Height = 32
+      Top = 408
+      Width = 88
+      Caption = '+1 year'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
+    object EndYearDecBtn: TSpeedButton
+      Tag = -365
+      Left = 104
+      Height = 32
+      Top = 408
+      Width = 88
+      Caption = '-1 year'
+      Flat = True
+      OnClick = EndDateEditBtnClick
+    end
   end
   object SQLQuery: TSQLQuery
     FieldDefs = <>

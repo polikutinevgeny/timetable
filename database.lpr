@@ -7,9 +7,9 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
+  Forms, datetimectrls, UMainWindow, UDirectoryWindow, UMetadata, UDB, UFilters,
   UQuery, UCardWindow, UNotification, UTimetableWindow, UConflicts, UConflictsDM,
-  UConflictTreeWindow, UExcelConstants, UExcelExport;
+  UConflictTreeWindow, UExcelConstants, UExcelExport, UBinaryHeap;
 
 {$R *.res}
 

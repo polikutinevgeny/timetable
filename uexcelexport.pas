@@ -10,13 +10,14 @@ uses
 type TData = array of array of array of array of String;
 
 procedure ExportTo(AFilename: WideString; ACols: array of String;
-  ARows: array of String; AData: TData; AFilters: array of TFilter; AFileType: Integer);
+  ARows: array of String; AData: TData; AFilters: array of TFilter; AFileType: Integer;
+  AStartDate, AEndDate: TDateTime);
 
 implementation
 
 procedure ExportTo(AFilename: WideString; ACols: array of String;
   ARows: array of String; AData: TData; AFilters: array of TFilter;
-  AFileType: Integer);
+  AFileType: Integer; AStartDate, AEndDate: TDateTime);
 const
   ColumnWidth = 30;
   FixedColumnWidth = 20;
@@ -111,6 +112,8 @@ begin
         xlworksheet.Cells[currow + High(AFilters), 2]).BorderAround(
           xlContinuous, xlThick, vbBlack);
     end;
+    xlworksheet.Cells[currow - 1, 4].Value := WideString(Format('From %s to %s', [
+      DateToStr(AStartDate), DateToStr(AEndDate)]));
     xlapp.Workbooks[1].SaveAs(AFilename, AFileType);
     xlapp.Workbooks[1].Close;
   except

@@ -5,8 +5,9 @@ unit UCardWindow;
 interface
 
 uses
-  Classes, SysUtils, sqldb, db, FileUtil, Forms, Controls, Graphics, Dialogs,
-  DbCtrls, ExtCtrls, ComCtrls, UMetadata, UQuery, UDB, StdCtrls, UNotification;
+  Classes, SysUtils, sqldb, db, FileUtil, DBDateTimePicker, Forms, Controls,
+  Graphics, Dialogs, DbCtrls, ExtCtrls, ComCtrls, UMetadata, UQuery, UDB,
+  StdCtrls, UNotification, DateTimePicker;
 
 type
 
@@ -35,7 +36,9 @@ type
     FComboboxes: array of TDBLookupComboBox;
     FMode: TCardMode;
     procedure CreateLabel(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol);
-    procedure AddEdit(ACol: TCol);
+    procedure AddEdit(ACol: TCol; AInteger: Boolean = False);
+    procedure AddTimeEdit(ACol: TCol);
+    procedure AddDateEdit(ACol: TCol);
     procedure AddCB(ACol: TCol; AVerticalCol: TCol; AHorizontalCol: TCol);
     procedure GetID;
     procedure PrepareQuery;
@@ -143,7 +146,7 @@ begin
   end;
 end;
 
-procedure TCardWindow.AddEdit(ACol: TCol);
+procedure TCardWindow.AddEdit(ACol: TCol; AInteger: Boolean);
 var
   te: TDBEdit;
 begin
@@ -154,9 +157,51 @@ begin
     DataSource := Self.DataSource;
     DataField := ACol.SQLName;
     Width := 400;
-    Left := 150;
+    Left := 200;
     Top := 20 + 50 * ScrollBox.Tag;
     Parent := ScrollBox;
+    te.NumbersOnly := AInteger;
+  end;
+  ScrollBox.Tag := ScrollBox.Tag + 1;
+end;
+
+procedure TCardWindow.AddTimeEdit(ACol: TCol);
+var
+  t: TDBDateTimePicker;
+begin
+  CreateLabel(ACol, nil, nil);
+  t := TDBDateTimePicker.Create(ScrollBox);
+  with t do
+  begin
+    DataSource := Self.DataSource;
+    DataField := ACol.SQLName;
+    Width := 400;
+    Left := 200;
+    Top := 20 + 50 * ScrollBox.Tag;
+    Parent := ScrollBox;
+    Kind := dtkTime;
+    DateMode := dmComboBox;
+  end;
+  ScrollBox.Tag := ScrollBox.Tag + 1;
+end;
+
+procedure TCardWindow.AddDateEdit(ACol: TCol);
+var
+  t: TDBDateTimePicker;
+begin
+  CreateLabel(ACol, nil, nil);
+  t := TDBDateTimePicker.Create(ScrollBox);
+  with t do
+  begin
+    DataSource := Self.DataSource;
+    DataField := ACol.SQLName;
+    Width := 400;
+    Left := 200;
+    Top := 20 + 50 * ScrollBox.Tag;
+    Parent := ScrollBox;
+    Kind := dtkDate;
+    DateMode := dmComboBox;
+    DateSeparator := '.';
   end;
   ScrollBox.Tag := ScrollBox.Tag + 1;
 end;
@@ -188,7 +233,7 @@ begin
     ListField := 'Data';
     KeyField := ACol.Reference.SQLName;
     Style := csDropDownList;
-    Left := 150;
+    Left := 200;
     Top := 20 + 50 * ScrollBox.Tag;
     Width := 400;
     Parent := ScrollBox;
@@ -273,7 +318,16 @@ begin
   FMode := AMode;
   PrepareQuery;
   for i := 0 to High(Table.Cols) do
-    AddEdit(Table.Cols[i]);
+  begin
+    if (Table.Cols[i].DataType = cdtString) then
+      AddEdit(Table.Cols[i])
+    else if (Table.Cols[i].DataType = cdtInteger) then
+      AddEdit(Table.Cols[i], True)
+    else if (Table.Cols[i].DataType = cdtDate) then
+      AddDateEdit(Table.Cols[i])
+    else if (Table.Cols[i].DataType = cdtTime) then
+      AddTimeEdit(Table.Cols[i]);
+  end;
   for i := 0 to High(Table.ForeignKeys) do
     AddCB(Table.ForeignKeys[i], AVerticalCol, AHorizontalCol);
   if (FMode = cmTTNew) then

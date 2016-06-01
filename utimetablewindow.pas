@@ -6,9 +6,10 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Grids, LCLIntf,
-  LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, Menus, UQuery,
-  UMetadata, sqldb, UFilters, math, UDirectoryWindow, UCardWindow, UDB,
-  UNotification, UConflictTreeWindow, UConflicts, UExcelExport, UExcelConstants;
+  LCLType, ExtCtrls, StdCtrls, Buttons, PairSplitter, CheckLst, Menus, Calendar,
+  EditBtn, UQuery, UMetadata, sqldb, UFilters, math, UDirectoryWindow,
+  UCardWindow, UDB, UNotification, UConflictTreeWindow, UConflicts,
+  UExcelExport, UExcelConstants, dateutils;
 
 type
 
@@ -18,11 +19,31 @@ type
 
   TTimetableWindow = class(TForm)
     ApplyBtn: TSpeedButton;
+    DatePnl: TPanel;
+    EndDayDecBtn: TSpeedButton;
+    StartDayIncBtn: TSpeedButton;
+    StartDayDecBtn: TSpeedButton;
+    EndDayIncBtn: TSpeedButton;
+    EndMonthDecBtn: TSpeedButton;
+    EndMonthIncBtn: TSpeedButton;
+    EndWeekDecBtn: TSpeedButton;
+    StartWeekIncBtn: TSpeedButton;
+    EndWeekIncBtn: TSpeedButton;
+    EndYearDecBtn: TSpeedButton;
+    StartYearIncBtn: TSpeedButton;
+    StartMonthIncBtn: TSpeedButton;
+    StartMonthDecBtn: TSpeedButton;
+    StartWeekDecBtn: TSpeedButton;
+    StartYearDecBtn: TSpeedButton;
+    StartDateDE: TDateEdit;
+    EndDateDE: TDateEdit;
     DisplayedFieldsCLB: TCheckListBox;
     DisplayedNamesCLB: TCheckListBox;
     HideEmptyCB: TCheckBox;
     HorizontalLbl: TLabel;
     FieldSelectionLbl: TLabel;
+    DateStartLbl: TLabel;
+    EndDateLbl: TLabel;
     MainMenu: TMainMenu;
     ExportMI: TMenuItem;
     ExcelMI: TMenuItem;
@@ -42,16 +63,21 @@ type
     HorizontalCB: TComboBox;
     OptionsPanel: TPanel;
     TimetableDG: TDrawGrid;
+    EndYearIncBtn: TSpeedButton;
     procedure AddFilterBtnClick(Sender: TObject);
     procedure ApplyBtnClick(Sender: TObject);
     procedure DisplayedFieldsCLBClickCheck(Sender: TObject);
     procedure DisplayedNamesCLBClickCheck(Sender: TObject);
+    procedure EndDateDEChange(Sender: TObject);
+    procedure EndDateEditBtnClick(Sender: TObject);
     procedure ExportMIClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure HideEmptyCBChange(Sender: TObject);
     procedure HorizontalCBChange(Sender: TObject);
     procedure ShowConflictsBtnClick(Sender: TObject);
+    procedure StartDateDEChange(Sender: TObject);
+    procedure StartDateEditBtnClick(Sender: TObject);
     procedure TimetableDGDblClick(Sender: TObject);
     procedure TimetableDGDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
@@ -465,7 +491,7 @@ begin
       + 1]) + 1);
     FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
     FConflicts[i][j][High(FConflicts[i][j])] :=
-      ConflictTypesContainer.GetConflicts(FIDs[i][j][High(FIDs[i][j])]);
+      ConflictTypesContainer.GetConflicts(StrToInt(FIDs[i][j][High(FIDs[i][j])]));
     for k := 3 to SQLQuery.FieldCount - 1 do
       if DisplayedFieldsCLB.Checked[k - 3] then
       begin
@@ -687,7 +713,8 @@ begin
     SQLQuery.Close;
     SQLQuery.SQL.Text := FQuery.SelectQueryAsText(
       VerticalCB.Items.Objects[VerticalCB.ItemIndex] as TCol,
-      HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol);
+      HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol,
+      StartDateDE.Date, EndDateDE.Date);
     SQLQuery.Prepare;
     for i := 0 to SQLQuery.Params.Count - 1 do
       SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
@@ -744,6 +771,27 @@ begin
   UpdateStatus;
 end;
 
+procedure TTimetableWindow.EndDateDEChange(Sender: TObject);
+begin
+  UpdateStatus;
+end;
+
+procedure TTimetableWindow.EndDateEditBtnClick(Sender: TObject);
+begin
+  if EndDateDE.Date = NullDate then
+    Exit;
+  case abs((Sender as TSpeedButton).Tag) of
+    1: EndDateDE.Date :=
+      IncDay(EndDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    7: EndDateDE.Date :=
+      IncWeek(EndDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    30: EndDateDE.Date :=
+      IncMonth(EndDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    365: EndDateDE.Date :=
+      IncYear(EndDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+  end;
+end;
+
 procedure TTimetableWindow.ExportMIClick(Sender: TObject);
 begin
   ExportDialog.Title := 'Export to ' + TMenuItem(Sender).Caption;
@@ -757,7 +805,7 @@ begin
   begin
     Screen.Cursor := crHourGlass;
     ExportTo(WideString(ExportDialog.FileName), FCols, FRows,
-      FData, FFilters, TMenuItem(Sender).Tag);
+      FData, FFilters, TMenuItem(Sender).Tag, StartDateDE.Date, EndDateDE.Date);
   end;
   Screen.Cursor := crDefault;
 end;
@@ -785,6 +833,8 @@ begin
   FConflictImage.LoadFromFile('icons/Conflict.png');
   FCurrentCell.x := 0;
   FCurrentCell.y := 0;
+  StartDateDE.Date := StartOfTheWeek(Today);
+  EndDateDE.Date := EndOfTheWeek(Today);
   SetLength(FFilters, 0);
   with FTextStyle do
   begin
@@ -801,6 +851,8 @@ begin
   FRealColList := TTimetableQuery.GetRealColList(Metadata.TimetableTable);
   SetupCBs;
   SetupGrid;
+  ApplyBtn.Enabled := False;
+  ExportMI.Enabled := True;
 end;
 
 procedure TTimetableWindow.HideEmptyCBChange(Sender: TObject);
@@ -816,6 +868,27 @@ end;
 procedure TTimetableWindow.ShowConflictsBtnClick(Sender: TObject);
 begin
   ConflictTreeWindow.Show;
+end;
+
+procedure TTimetableWindow.StartDateDEChange(Sender: TObject);
+begin
+  UpdateStatus;
+end;
+
+procedure TTimetableWindow.StartDateEditBtnClick(Sender: TObject);
+begin
+  if StartDateDE.Date = NullDate then
+    Exit;
+  case abs((Sender as TSpeedButton).Tag) of
+    1: StartDateDE.Date :=
+      IncDay(StartDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    7: StartDateDE.Date :=
+      IncWeek(StartDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    30: StartDateDE.Date :=
+      IncMonth(StartDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+    365: StartDateDE.Date :=
+      IncYear(StartDateDE.Date, Sign((Sender as TSpeedButton).Tag));
+  end;
 end;
 
 procedure TTimetableWindow.TimetableDGDblClick(Sender: TObject);

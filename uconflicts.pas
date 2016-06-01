@@ -5,7 +5,8 @@ unit UConflicts;
 interface
 
 uses
-  Classes, SysUtils, UMetadata, UQuery, UConflictsDM, Dialogs, ComCtrls, UNotification;
+  Classes, SysUtils, UMetadata, UQuery, UConflictsDM, Dialogs, ComCtrls, UNotification,
+  UBinaryHeap;
 
 type
 
@@ -15,9 +16,9 @@ type
 
   TConflict = class
     public
-      ConflictedIDs: TStringArray;
+      ConflictedIDs: array of Integer;
       Parent: TBaseConflictType;
-      constructor Create(AConflictedIDs: TStringArray; AParent: TBaseConflictType);
+      constructor Create(AConflictedIDs: array of Integer; AParent: TBaseConflictType);
   end;
 
   { TBaseConflictType }
@@ -66,7 +67,7 @@ type
       ConflictTypes: array of TBaseConflictType;
       procedure RegisterConflict(AConflict: TBaseConflictType);
       procedure RefreshConflicts;
-      function GetConflicts(AID: String): TConflictArray;
+      function GetConflicts(AID: Integer): TConflictArray;
       constructor Create;
   end;
 
@@ -139,7 +140,7 @@ begin
     ConflictTypes[i].RefreshConflicts;
 end;
 
-function TConflictTypesContainer.GetConflicts(AID: String): TConflictArray;
+function TConflictTypesContainer.GetConflicts(AID: Integer): TConflictArray;
 var
   i, j, k: Integer;
   found: Boolean;
@@ -192,9 +193,26 @@ procedure TCapacityConflictType.RefreshConflicts;
 var
   i, total, curcap: Integer;
   cvs: TStringArray;
-  ccids: TStringArray;
+  ccids: array of Integer;
   eqok: Boolean;
+  heap: TIDDateCapacityBinaryHeap;
+
+  procedure NewConflict;
+  var
+    j: Integer;
+  begin
+    if total > curcap then
+    begin
+      SetLength(ccids, Length(heap.Values));
+      for j := 0 to High(heap.Values) do
+        ccids[j] := heap.Values[j].ID;
+      SetLength(Conflicts, Length(Conflicts) + 1);
+      Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
+    end;
+  end;
+
 begin
+  heap := TIDDateCapacityBinaryHeap.Create;
   SetLength(Conflicts, 0);
   with ConflictsDM.SQLQuery do
   begin;
@@ -205,10 +223,11 @@ begin
     Open;
     First;
     SetLength(cvs, Length(EqualFields));
-    SetLength(ccids, 1);
     for i := 0 to High(EqualFields) do
       cvs[i] := FieldByName(EqualFields[i].DisplayName).AsString;
-    ccids[0] := FieldByName('ID').AsString;
+    heap.Push(IDDateCapacity(FieldByName('ID').AsInteger,
+      FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime,
+      FieldByName(CapacityConsumingField.DisplayName).AsInteger));
     total := FieldByName(CapacityConsumingField.DisplayName).AsInteger;
     curcap := FieldByName(CapacityField.DisplayName).AsInteger;
     Next;
@@ -223,34 +242,38 @@ begin
         end;
       if eqok then
       begin
-        SetLength(ccids, Length(ccids) + 1);
-        ccids[High(ccids)] := FieldByName('ID').AsString;
+        if (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime > heap.Values[0].EndDate) then
+        begin
+          NewConflict;
+          while (Length(heap.Values) > 0) and
+            (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime < heap.Values[0].EndDate)
+          do
+          begin
+            total -= heap.Values[0].Capacity;
+            heap.Pop;
+          end;
+        end;
         total += FieldByName(CapacityConsumingField.DisplayName).AsInteger;
         if EOF then
         begin
-          if total > curcap then
-          begin
-            SetLength(Conflicts, Length(Conflicts) + 1);
-            Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
-          end;
+          NewConflict;
           break;
         end;
       end
       else
       begin
-        if total > curcap then
-        begin
-          SetLength(Conflicts, Length(Conflicts) + 1);
-          Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
-        end;
+        NewConflict;
+        while (Length(heap.Values) > 0) do
+          heap.Pop;
         curcap := FieldByName(CapacityField.DisplayName).AsInteger;
         total := FieldByName(CapacityConsumingField.DisplayName).AsInteger;
-        SetLength(ccids, 1);
-        ccids[0] := FieldByName('ID').AsString;
         for i := 0 to High(EqualFields) do
           cvs[i] := FieldByName(EqualFields[i].DisplayName).AsString;
         eqok := True;
       end;
+      heap.Push(IDDateCapacity(FieldByName('ID').AsInteger,
+        FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime,
+        FieldByName(CapacityConsumingField.DisplayName).AsInteger));
       Next;
     end;
   end;
@@ -258,13 +281,13 @@ end;
 
 { TConflict }
 
-constructor TConflict.Create(AConflictedIDs: TStringArray;
+constructor TConflict.Create(AConflictedIDs: array of Integer;
   AParent: TBaseConflictType);
 var i: Integer;
 begin
   SetLength(ConflictedIDs, Length(AConflictedIDs));
   for i := 0 to High(AConflictedIDs) do
-    ConflictedIDs := AConflictedIDs;
+    ConflictedIDs[i] := AConflictedIDs[i];
   Parent := AParent;
 end;
 
@@ -289,9 +312,25 @@ procedure TValueConflictType.RefreshConflicts;
 var
   i: Integer;
   cvs: TStringArray;
-  ccids: TStringArray;
+  ccids: array of Integer;
   eqok, neqok: Boolean;
+  heap: TIDDateBinaryHeap;
+
+  procedure NewConflict;
+  var j : Integer;
+  begin
+    if (neqok) and (Length(heap.Values) > 1) then
+    begin
+      SetLength(ccids, Length(heap.Values));
+      for j := 0 to High(heap.Values) do
+        ccids[j] := heap.Values[j].ID;
+      SetLength(Conflicts, Length(Conflicts) + 1);
+      Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
+    end;
+  end;
+
 begin
+  heap := TIDDateBinaryHeap.Create();
   SetLength(Conflicts, 0);
   with ConflictsDM.SQLQuery do
   begin;
@@ -307,7 +346,8 @@ begin
     for i := 0 to High(NotEqualFields) do
       cvs[i + Length(EqualFields)] :=
         FieldByName(NotEqualFields[i].DisplayName).AsString;
-    ccids[0] := FieldByName('ID').AsString;
+    heap.Push(IDDatePair(FieldByName('ID').AsInteger,
+      FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime));
     Next;
     eqok := True;
     neqok := False;
@@ -329,27 +369,26 @@ begin
             neqok := True;
             Break;
           end;
-        SetLength(ccids, Length(ccids) + 1);
-        ccids[High(ccids)] := FieldByName('ID').AsString;
+        if (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime > heap.Values[0].EndDate) then
+        begin
+          NewConflict;
+          while (Length(heap.Values) > 0) and
+            (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime < heap.Values[0].EndDate)
+          do
+            heap.Pop;
+        end;
         if EOF then
         begin
-          if (neqok) and (Length(ccids) > 1) then
-          begin
-            SetLength(Conflicts, Length(Conflicts) + 1);
-            Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
-          end;
+          NewConflict;
           Break;
         end;
       end
       else
       begin
-        if (neqok) and (Length(ccids) > 1) then
-        begin
-          SetLength(Conflicts, Length(Conflicts) + 1);
-          Conflicts[High(Conflicts)] := TConflict.Create(ccids, Self);
-        end;
-        SetLength(ccids, 1);
-        ccids[0] := FieldByName('ID').AsString;
+        if (neqok) and (Length(heap.Values) > 1) then
+          NewConflict;
+        while (Length(heap.Values) > 0) do
+          heap.Pop;
         for i := 0 to High(EqualFields) do
           cvs[i] := FieldByName(EqualFields[i].DisplayName).AsString;
         for i := 0 to High(NotEqualFields) do
@@ -358,9 +397,12 @@ begin
         eqok := True;
         neqok := False;
       end;
+      heap.Push(IDDatePair(FieldByName('ID').AsInteger,
+        FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime));
       Next;
     end;
   end;
+  heap.Free;
 end;
 
 initialization

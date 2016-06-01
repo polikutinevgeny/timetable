@@ -40,7 +40,7 @@ type
       function SelectQueryAsText(ASortColumn: String = '';
         ASortDirection: String = ''): String;
       function DeleteQueryAsText: String;
-      class function GetFullColList(ATable: TTable): TColArray;
+      class function GetFullColList(ATable: TTable; AShowHidden: Boolean = False): TColArray;
   end;
 
   { TTimetableQuery }
@@ -49,7 +49,8 @@ type
     private
       function GetSelectAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
     public
-      function SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol): String;
+      function SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol;
+        AStartDate, AEndDate: TDateTime): String;
       class function DeleteQueryAsText(ATable: TTable): String;
       class function UpdateQueryAsText(ATable: TTable; AVertColumn: TCol;
         AHorizColumn: TCol): String;
@@ -78,7 +79,7 @@ type
     private
       function GetSelectAsText: String;
     public
-      function DisplayQueryAsText(AIDs: TStringArray): String;
+      function DisplayQueryAsText(AIDs: array of Integer): String;
   end;
 
   { TValueConflictQuery }
@@ -122,14 +123,14 @@ begin
     FCols[High(FCols)].DisplayName]);
 end;
 
-function TBaseConflictQuery.DisplayQueryAsText(AIDs: TStringArray): String;
+function TBaseConflictQuery.DisplayQueryAsText(AIDs: array of Integer): String;
 var i: Integer;
 begin
   Result := Format('%s %s WHERE %s.%s IN(', [
     GetSelectAsText, GetFromAsText, FTables[0].SQLName, FTables[0].PrimaryKey.SQLName]);
   for i := 0 to High(AIDs) - 1 do
-    Result += AIDs[i] + ', ';
-  Result += AIDs[High(AIDs)] + ')';
+    Result += IntToStr(AIDs[i]) + ', ';
+  Result += IntToStr(AIDs[High(AIDs)]) + ')';
 end;
 
 { TCapacityConflictQuery }
@@ -160,10 +161,10 @@ begin
     ACapacityConsumingField.Table.PrimaryKey.SQLName, ATable.SQLName,
     ACapacityConsumingFieldRef.SQLName]);
   Result += 'ORDER BY ';
-  for i := 0 to High(AEqual) - 1 do
+  for i := 0 to High(AEqual) do
     Result += Format('"%s", ', [AEqual[i].DisplayName]);
-  if Length(AEqual) > 0 then
-    Result += Format('"%s" ', [AEqual[High(AEqual)].DisplayName]);
+  Result += Format('"%s", ', [Metadata.PeriodStartCol.DisplayName]);
+  Result += Format('"%s"', [Metadata.PeriodEndCol.DisplayName]);
 end;
 
 { TValueConflictQuery }
@@ -177,7 +178,7 @@ begin
     Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.Cols[i].SQLName,
       ATable.Cols[i].DisplayName]);
   if Length(ATable.Cols) > 0 then
-    Result += Format('%s.%s AS "%s" ', [ATable.SQLName,
+    Result += Format('%s.%s AS "%s", ', [ATable.SQLName,
       ATable.Cols[High(ATable.Cols)].SQLName, ATable.Cols[High(ATable.Cols)].DisplayName]);
   for i := 0 to High(ATable.ForeignKeys) - 1 do
     Result += Format('%s.%s AS "%s", ', [ATable.SQLName, ATable.ForeignKeys[i].SQLName,
@@ -187,10 +188,10 @@ begin
       ATable.ForeignKeys[High(ATable.ForeignKeys)].SQLName,
       ATable.ForeignKeys[High(ATable.ForeignKeys)].DisplayName]);
   Result += Format('FROM %s ORDER BY ', [ATable.SQLName]);
-  for i := 0 to High(AEqual) - 1 do
+  for i := 0 to High(AEqual) do
     Result += Format('"%s", ', [AEqual[i].DisplayName]);
-  if Length(AEqual) > 0 then
-    Result += Format('"%s" ', [AEqual[High(AEqual)].DisplayName]);
+  Result += Format('"%s", ', [Metadata.PeriodStartCol.DisplayName]);
+  Result += Format('"%s"', [Metadata.PeriodEndCol.DisplayName]);
   if Length(ANotEqual) > 0 then
     Result += ', ';
   for i := 0 to High(ANotEqual) - 1 do
@@ -298,11 +299,24 @@ begin
     FCols[High(FCols)].DisplayName]);
 end;
 
-function TTimetableQuery.SelectQueryAsText(AVertColumn: TCol; AHorizColumn: TCol
-  ): String;
+function TTimetableQuery.SelectQueryAsText(AVertColumn: TCol;
+  AHorizColumn: TCol; AStartDate, AEndDate: TDateTime): String;
+var s: String;
 begin
-  Result := Format('%s %s %s ORDER BY ', [
-    GetSelectAsText(AVertColumn, AHorizColumn), GetFromAsText, GetFiltersAsText]);
+  Result := Format('%s %s ', [
+    GetSelectAsText(AVertColumn, AHorizColumn), GetFromAsText]);
+  s := GetFiltersAsText;
+  if s <> '' then
+    Result += Format('%s AND %s.%s < ''%s'' AND %s.%s > ''%s'' ', [s,
+      Metadata.PeriodStartCol.Table.SQLName, Metadata.PeriodStartCol.SQLName,
+      FormatDateTime('DD.MM.YYYY', AEndDate), Metadata.PeriodEndCol.Table.SQLName,
+      Metadata.PeriodEndCol.SQLName, FormatDateTime('DD.MM.YYYY', AStartDate)])
+  else
+    Result += Format('WHERE %s.%s < ''%s'' AND %s.%s > ''%s'' ', [
+      Metadata.PeriodStartCol.Table.SQLName, Metadata.PeriodStartCol.SQLName,
+      FormatDateTime('DD.MM.YYYY', AEndDate), Metadata.PeriodEndCol.Table.SQLName,
+      Metadata.PeriodEndCol.SQLName, FormatDateTime('DD.MM.YYYY', AStartDate)]);
+  Result += 'ORDER BY ';
   if AVertColumn.Table.SortKey <> nil then
     Result += AVertColumn.Table.SortKey.Table.SQLName + '.' +
       AVertColumn.Table.SortKey.SQLName + ', '
@@ -334,26 +348,34 @@ var
   i, j, w: Integer;
   s: String;
 begin
-  SetLength(Result, Length(ATable.Cols) + Length(ATable.ForeignKeys));
+  SetLength(Result, 0);
   for i := 0 to High(ATable.Cols) do
-    Result[i] := ATable.Cols[i];
+    if (not ATable.Cols[i].Hidden) then
+    begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := ATable.Cols[i];
+    end;
   for i := 0 to High(ATable.ForeignKeys) do
     with ATable.ForeignKeys[i] do
     begin
       s := '';
       w := 0;
-      for j := 0 to High(Reference.Table.Cols) - 1 do
+      for j := 0 to High(Reference.Table.Cols) do
       begin
-        s += Format('%s.%s || '' '' || ', [
-          Reference.Table.SQLName,
-          Reference.Table.Cols[j].SQLName]);
-        w += Reference.Table.Cols[j].Width;
+        if not Reference.Table.Cols[j].Hidden then
+        begin
+          if j <> 0 then
+            s += '|| '' '' || ';
+          s += Format('%s.%s ', [
+            Reference.Table.SQLName,
+            Reference.Table.Cols[j].SQLName]);
+          w += Reference.Table.Cols[j].Width;
+        end;
       end;
-      s += Format('%s.%s', [Reference.Table.SQLName,
-        Reference.Table.Cols[High(Reference.Table.Cols)].SQLName]);
       w += Reference.Table.Cols[High(Reference.Table.Cols)].Width;
-      Result[Length(ATable.Cols) + i] := TCol.Create(s, DisplayName, w, False, False);
-      Result[Length(ATable.Cols) + i].Table := Reference.Table;
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := TCol.Create(cdtString, False, s, DisplayName, w, False, False);
+      Result[High(Result)].Table := Reference.Table;
     end;
 end;
 
@@ -371,11 +393,18 @@ end;
 class function TTimetableQuery.GetRealColList(ATable: TTable): TColArray;
 var i: Integer;
 begin
-  SetLength(Result, Length(ATable.Cols) + Length(ATable.ForeignKeys));
   for i := 0 to High(ATable.Cols) do
-    Result[i] := ATable.Cols[i];
+  begin
+    if ATable.Cols[i].Hidden then
+      Continue;
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := ATable.Cols[i];
+  end;
   for i := 0 to High(ATable.ForeignKeys) do
-    Result[Length(ATable.Cols) + i] := ATable.ForeignKeys[i];
+  begin
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := ATable.ForeignKeys[i];
+  end;
 end;
 
 { TCardQuery }
@@ -390,14 +419,12 @@ function TCardQuery.SelectQueryAsText: String;
 var i: Integer;
 begin
   Result := 'SELECT ';
-  for i := 0 to High(FTable.Cols) - 1 do
+  for i := 0 to High(FTable.Cols) do
     Result += FTable.Cols[i].SQLName + ', ';
-  if Length(FTable.ForeignKeys) = 0 then
-    Result += FTable.Cols[High(FTable.Cols)].SQLName + ' ';
-  for i := 0 to High(FTable.ForeignKeys) - 1 do
+  for i := 0 to High(FTable.ForeignKeys) do
     Result += FTable.ForeignKeys[i].SQLName + ', ';
-  if Length(FTable.ForeignKeys) <> 0 then
-    Result += FTable.ForeignKeys[High(FTable.ForeignKeys)].SQLName + ' ';
+  if Result[High(Result) - 1] = ',' then
+    Result[High(Result) - 1] := ' ';
   Result += Format(' FROM %s WHERE %s = %d', [
     FTable.SQLName, FTable.PrimaryKey.SQLName, FID]);
 end;
@@ -486,18 +513,25 @@ begin
     FTables[0].PrimaryKey.DisplayName]);
 end;
 
-class function TDirectoryQuery.GetFullColList(ATable: TTable): TColArray;
+class function TDirectoryQuery.GetFullColList(ATable: TTable;
+  AShowHidden: Boolean): TColArray;
 var i, j: Integer;
 begin
-  SetLength(Result, Length(ATable.Cols));
+  SetLength(Result, 0);
   for i := 0 to High(ATable.Cols) do
-    Result[i] := ATable.Cols[i];
-  for i := 0 to High(ATable.ForeignKeys) do
-    for j := 0 to High(ATable.ForeignKeys[i].Reference.Table.Cols) do
+    if (ATable.Cols[i].Hidden and AShowHidden) or (not ATable.Cols[i].Hidden) then
     begin
       SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := ATable.ForeignKeys[i].Reference.Table.Cols[j];
+      Result[High(Result)] := ATable.Cols[i];
     end;
+  for i := 0 to High(ATable.ForeignKeys) do
+    for j := 0 to High(ATable.ForeignKeys[i].Reference.Table.Cols) do
+      if (ATable.ForeignKeys[i].Reference.Table.Cols[j].Hidden and AShowHidden) or
+        (not ATable.ForeignKeys[i].Reference.Table.Cols[j].Hidden) then
+      begin
+        SetLength(Result, Length(Result) + 1);
+        Result[High(Result)] := ATable.ForeignKeys[i].Reference.Table.Cols[j];
+      end;
 end;
 
 end.

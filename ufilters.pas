@@ -45,7 +45,7 @@ type
         ACols: array of TCol; AEnabled: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
       procedure SetupHiddenFilter(AValueTEValue: String);
-      procedure SetupHiddenFilter(AValueTEValues: array of String);
+      procedure SetupHiddenFilter(AValueTEValues: array of Integer);
       function Copy(AScrollbox: TScrollBox): TFilter;
       property Visible: Boolean read FEnabled;
       property Column: TCol read GetCol;
@@ -219,14 +219,14 @@ begin
   FValueTE.Text := AValueTEValue;
 end;
 
-procedure TFilter.SetupHiddenFilter(AValueTEValues: array of String);
+procedure TFilter.SetupHiddenFilter(AValueTEValues: array of Integer);
 var i: Integer;
 begin
   FActionCB.ItemIndex := FActionCB.Items.IndexOf('IN');
   FColumnCB.ItemIndex := 0;
-  FValueTE.Text := AValueTEValues[0];
+  FValueTE.Text := IntToStr(AValueTEValues[0]);
   for i := 1 to High(AValueTEValues) do
-    FValueTE.Text := FValueTE.Text + ',' + AValueTEValues[i];
+    FValueTE.Text := FValueTE.Text + ',' + IntToStr(AValueTEValues[i]);
 end;
 
 function TFilter.Copy(AScrollbox: TScrollBox): TFilter;
