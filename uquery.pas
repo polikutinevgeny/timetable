@@ -54,7 +54,7 @@ type
       class function DeleteQueryAsText(ATable: TTable): String;
       class function UpdateQueryAsText(ATable: TTable; AVertColumn: TCol;
         AHorizColumn: TCol): String;
-      class function GetFullColList(ATable: TTable): TColArray;
+      class function GetFullColList(ATable: TTable; AShowHidden: Boolean = False): TColArray;
       class function GetValuesListQuery(ACol: TCol): String;
       class function GetRealColList(ATable: TTable): TColArray;
   end;
@@ -352,14 +352,15 @@ begin
     ATable.PrimaryKey.SQLName, 'ID']);
 end;
 
-class function TTimetableQuery.GetFullColList(ATable: TTable): TColArray;
+class function TTimetableQuery.GetFullColList(ATable: TTable;
+  AShowHidden: Boolean): TColArray;
 var
   i, j, w: Integer;
   s: String;
 begin
   SetLength(Result, 0);
   for i := 0 to High(ATable.Cols) do
-    if (not ATable.Cols[i].Hidden) then
+    if (not ATable.Cols[i].Hidden) or AShowHidden then
     begin
       SetLength(Result, Length(Result) + 1);
       Result[High(Result)] := ATable.Cols[i];
@@ -371,7 +372,7 @@ begin
       w := 0;
       for j := 0 to High(Reference.Table.Cols) do
       begin
-        if not Reference.Table.Cols[j].Hidden then
+        if (not Reference.Table.Cols[j].Hidden) or AShowHidden then
         begin
           if j <> 0 then
             s += '|| '' '' || ';

@@ -186,7 +186,7 @@ begin
   CapacityFieldRef := ACapacityFieldRef;
   CapacityConsumingFieldRef := ACapacityConsumingFieldRef;
   FQuery := TCapacityConflictQuery.Create(Metadata.TimetableTable, nil,
-    TTimetableQuery.GetFullColList(Metadata.TimetableTable));
+    TTimetableQuery.GetFullColList(Metadata.TimetableTable, True));
 end;
 
 procedure TCapacityConflictType.RefreshConflicts;
@@ -305,7 +305,7 @@ begin
     NotEqualFields[i] := ANotEqualFields[i];
   Name := AName;
   FQuery := TCapacityConflictQuery.Create(Metadata.TimetableTable, nil,
-    TTimetableQuery.GetFullColList(Metadata.TimetableTable));
+    TTimetableQuery.GetFullColList(Metadata.TimetableTable, True));
 end;
 
 procedure TValueConflictType.RefreshConflicts;
