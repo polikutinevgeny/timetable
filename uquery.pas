@@ -393,6 +393,7 @@ end;
 class function TTimetableQuery.GetRealColList(ATable: TTable): TColArray;
 var i: Integer;
 begin
+  SetLength(Result, 0);
   for i := 0 to High(ATable.Cols) do
   begin
     if ATable.Cols[i].Hidden then

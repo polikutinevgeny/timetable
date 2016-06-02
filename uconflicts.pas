@@ -335,12 +335,12 @@ var
     neqok := False;
     if Length(heap.Values) < 1 then
       Exit;
-    for j := 0 to High(cvs) do
-      cvs[j] := heap.Values[0].Data[j];
+    for j := Length(EqualFields) to High(cvs) do
+      cvs[j] := heap.Values[0].Data[j - Length(EqualFields)];
     for j := 0 to High(heap.Values) do
     begin
-      for k := 0 to High(cvs) do
-        if cvs[i] <> heap.Values[j].Data[i] then
+      for k := Length(EqualFields) to High(cvs) do
+        if cvs[k] <> heap.Values[j].Data[k - Length(EqualFields)] then
         begin
           neqok := True;
           Break;
@@ -397,7 +397,7 @@ begin
         begin
           NewConflict;
           while (Length(heap.Values) > 0) and
-            (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime < heap.Values[0].EndDate)
+            (FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime > heap.Values[0].EndDate)
           do
             heap.Pop;
           CheckHeap;
