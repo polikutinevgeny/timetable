@@ -661,7 +661,7 @@ object TimetableWindow: TTimetableWindow
     DefaultRowHeight = 200
     ExtendedSelect = False
     MouseWheelOption = mwGrid
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goSmoothScroll, goFixedColSizing, goDontScrollPartCell]
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSizing, goColSizing, goThumbTracking, goSmoothScroll, goFixedColSizing, goDontScrollPartCell]
     RowCount = 1
     TabAdvance = aaDown
     TabOrder = 4

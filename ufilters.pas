@@ -37,7 +37,7 @@ type
       FLastType: TColDataType;
       function GetCol: TCol;
       function GetAction: String;
-      function GetValue: String;
+      function GetValue: Variant;
       procedure FilterUpdate(Sender: TObject);
       procedure FilterRemove(Sender: TObject);
       procedure CreateColumnCB(AScrollbox: TScrollBox; ACols: array of TCol);
@@ -58,7 +58,7 @@ type
       property Visible: Boolean read FEnabled;
       property Column: TCol read GetCol;
       property Action: String read GetAction;
-      property Value: String read GetValue;
+      property Value: Variant read GetValue;
       property OnFilterUpdate: TFilterUpdateEvent read FOnFilterUpdate
         write FOnFilterUpdate;
       property OnFilterRemove: TFilterRemoveEvent read FOnFilterRemove
@@ -104,15 +104,15 @@ begin
   Result := Actions[FActionCB.ItemIndex];
 end;
 
-function TFilter.GetValue: String;
+function TFilter.GetValue: Variant;
 begin
   if FColumnCB.ItemIndex = -1 then
     raise TActionException.Create('Please, select column');
   case FCols[FColumnCB.ItemIndex].DataType of
-    cdtDate: Result := FormatDateTime('DD-MM-YYYY', FDateDE.Date);
+    cdtDate: Result := FDateDE.Date;
     cdtInteger: Result := FIntegerTE.Text;
     cdtString: Result := FStringTE.Text;
-    cdtTime: Result := FormatDateTime('HH:MM:SS', FTimeDTP.Time);
+    cdtTime: Result := FTimeDTP.Time;
   end;
 end;
 

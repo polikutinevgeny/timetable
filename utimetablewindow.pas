@@ -761,7 +761,7 @@ begin
       StartDateDE.Date, EndDateDE.Date);
     SQLQuery.Prepare;
     for i := 0 to SQLQuery.Params.Count - 1 do
-      SQLQuery.Params.Items[i].AsString := FFilters[i].Value;
+      SQLQuery.Params.Items[i].Value := FFilters[i].Value;
     SQLQuery.Open;
   except
     on E: Exception do
