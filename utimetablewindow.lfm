@@ -1,10 +1,10 @@
 object TimetableWindow: TTimetableWindow
-  Left = 601
-  Height = 755
+  Left = 559
+  Height = 756
   Top = 62
   Width = 1349
   Caption = 'Timetable'
-  ClientHeight = 725
+  ClientHeight = 726
   ClientWidth = 1349
   Menu = MainMenu
   OnClose = FormClose
@@ -84,7 +84,7 @@ object TimetableWindow: TTimetableWindow
     AnchorSideBottom.Side = asrBottom
     Left = 274
     Height = 153
-    Top = 572
+    Top = 573
     Width = 630
     HorzScrollBar.Page = 1
     VertScrollBar.Page = 1
@@ -102,7 +102,7 @@ object TimetableWindow: TTimetableWindow
     AnchorSideBottom.Side = asrBottom
     Left = 904
     Height = 153
-    Top = 572
+    Top = 573
     Width = 445
     Anchors = [akTop, akRight, akBottom]
     ClientHeight = 153
@@ -159,7 +159,7 @@ object TimetableWindow: TTimetableWindow
     AnchorSideBottom.Side = asrBottom
     Left = 200
     Height = 153
-    Top = 572
+    Top = 573
     Width = 74
     Anchors = [akTop, akLeft, akBottom]
     ClientHeight = 153
@@ -649,7 +649,7 @@ object TimetableWindow: TTimetableWindow
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Splitter
     Left = 200
-    Height = 513
+    Height = 514
     Top = 48
     Width = 1149
     Align = alCustom
@@ -682,7 +682,7 @@ object TimetableWindow: TTimetableWindow
     Cursor = crVSplit
     Left = 0
     Height = 11
-    Top = 561
+    Top = 562
     Width = 1349
     Align = alCustom
     Anchors = [akLeft, akRight]
@@ -690,11 +690,11 @@ object TimetableWindow: TTimetableWindow
   end
   object DatePnl: TPanel
     Left = 0
-    Height = 677
+    Height = 678
     Top = 48
     Width = 200
     Align = alLeft
-    ClientHeight = 677
+    ClientHeight = 678
     ClientWidth = 200
     TabOrder = 6
     object StartDateDE: TDateEdit

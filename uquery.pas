@@ -287,6 +287,15 @@ begin
   Result += Format('%s.%s AS VerticalID, %s.%s AS HorizontalID, ', [
     AVertColumn.Table.SQLName, AVertColumn.Table.PrimaryKey.SQLName,
     AHorizColumn.Table.SQLName, AHorizColumn.Table.PrimaryKey.SQLName]);
+  Result += Format('%s.%s AS "%s", %s.%s AS "%s", %s.%s AS "%s", %s.%s AS "%s",',[
+    Metadata.PeriodEndCol.Table.SQLName, Metadata.PeriodEndCol.SQLName,
+    Metadata.PeriodEndCol.DisplayName,
+    Metadata.PeriodStartCol.Table.SQLName, Metadata.PeriodStartCol.SQLName,
+    Metadata.PeriodStartCol.DisplayName,
+    Metadata.WeekdayCol.Table.SQLName, Metadata.WeekdayCol.SQLName,
+    Metadata.WeekdayCol.DisplayName,
+    Metadata.RepeatPeriod.Table.SQLName, Metadata.RepeatPeriod.SQLName,
+    Metadata.RepeatPeriod.DisplayName]);
   for i := 0 to High(FCols) - 1 do
   begin
     if FCols[i].Real then

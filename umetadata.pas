@@ -59,6 +59,8 @@ type
       TimetableTable: TTable;
       PeriodStartCol: TCol;
       PeriodEndCol: TCol;
+      WeekdayCol: TCol;
+      RepeatPeriod: TCol;
       procedure RegisterTable(
         ASQLName, ADisplayName: String; ACols: array of TCol;
         AGenerator: String; IsTimeTable: Boolean = False; SortBy: String = '');
@@ -232,5 +234,7 @@ initialization
     'TimetableIdGenerator', True);
   Metadata.PeriodStartCol := Metadata.GetColByName('Timetable', 'actuality_period_start');
   Metadata.PeriodEndCol := Metadata.GetColByName('Timetable', 'actuality_period_end');
+  Metadata.WeekdayCol := Metadata.GetColByName('Weekdays', 'number');
+  Metadata.RepeatPeriod := Metadata.GetColByName('Timetable', 'repeat_period');
 end.
 

@@ -1,7 +1,7 @@
 object CardWindow: TCardWindow
-  Left = 523
+  Left = 349
   Height = 600
-  Top = 136
+  Top = 91
   Width = 700
   Caption = 'Object card'
   ClientHeight = 600

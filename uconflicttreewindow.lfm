@@ -1,7 +1,7 @@
 object ConflictTreeWindow: TConflictTreeWindow
-  Left = 590
+  Left = 393
   Height = 769
-  Top = 197
+  Top = 131
   Width = 830
   Caption = 'Conflicts'
   ClientHeight = 769

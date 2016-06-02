@@ -1,8 +1,8 @@
 object ConflictsDM: TConflictsDM
   OldCreateOrder = False
   Height = 81
-  HorizontalOffset = 987
-  VerticalOffset = 269
+  HorizontalOffset = 658
+  VerticalOffset = 179
   Width = 176
   object SQLQuery: TSQLQuery
     FieldDefs = <>

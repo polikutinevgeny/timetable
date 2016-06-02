@@ -1,17 +1,17 @@
 object MainWindow: TMainWindow
-  Left = 650
-  Height = 200
-  Top = 134
+  Left = 433
+  Height = 201
+  Top = 89
   Width = 400
   Caption = 'Timetable'
-  ClientHeight = 170
+  ClientHeight = 171
   ClientWidth = 400
   Menu = MainMenu
   OnCreate = FormCreate
   LCLVersion = '1.6.0.4'
   object StartupLabel: TLabel
     Left = 0
-    Height = 170
+    Height = 171
     Top = 0
     Width = 400
     Align = alClient

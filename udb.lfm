@@ -1,8 +1,8 @@
 object DB: TDB
   OldCreateOrder = False
   Height = 150
-  HorizontalOffset = 1166
-  VerticalOffset = 271
+  HorizontalOffset = 777
+  VerticalOffset = 181
   Width = 176
   object SQLTransaction: TSQLTransaction
     Active = False

@@ -163,6 +163,7 @@ const
   BorderMargin = 2;
   RightMargin = 25;
   ButtonSize = 25;
+  ServiceCols = 7;
 
 {$R *.lfm}
 
@@ -389,10 +390,10 @@ begin
     for j := 0 to High(FCols) do
       FillRecord(j, i, fr, fc);
   c := 0;
-  for k := 3 to SQLQuery.FieldCount - 1 do
-    if DisplayedFieldsCLB.Checked[k - 3] then
+  for k := ServiceCols to SQLQuery.FieldCount - 1 do
+    if DisplayedFieldsCLB.Checked[k - ServiceCols] then
       c += 1;
-  FRecordHeight := TimetableDG.Canvas.TextHeight('Hlg') * c;
+  FRecordHeight := TimetableDG.Canvas.TextHeight('Hlg') * (c + 1);
 end;
 
 procedure TTimetableWindow.DrawNewWindowBtn(ALeft: Integer; ATop: Integer);
@@ -473,35 +474,75 @@ end;
 
 procedure TTimetableWindow.FillRecord(j: Integer; i: Integer;
   var AFilledRows: TBooleanArray; var AFilledCols: TBooleanArray);
+
+  function myGCD(a, b: integer): integer;
+  begin
+     if a = 0 then
+        myGCD := b
+     else if b = 0 then
+        myGCD := a
+     else if a = b then
+        myGCD := a
+     else if (a = 1) or (b =1) then
+        myGCD := 1
+     else if (a mod 2 = 0) and (b mod 2 = 0) then
+        myGCD := 2 * myGCD(a div 2, b div 2)
+     else if (a mod 2 = 0) and (b mod 2 <> 0) then
+        myGCD := myGCD(a div 2, b)
+     else if (a mod 2 <> 0) and (b mod 2 = 0) then
+        myGCD := myGCD(a, b div 2)
+     else
+        myGCD := myGCD(b, abs(a - b));
+  end;
+
 var
   t: array of array of String;
-  k : Integer;
+  k, wd, step : Integer;
+  c, s, e: TDateTime;
 begin
   t := FData[i][j];
   while (not SQLQuery.EOF) and
     (FRowIDs[i] = SQLQuery.FieldByName('VerticalID').AsString) and
     (FColIDs[j] = SQLQuery.FieldByName('HorizontalID').AsString) do
   begin
-    AFilledRows[i] := True;
-    AFilledCols[j] := True;
-    SetLength(t, Length(t) + 1);
-    SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
-    SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
-    SetLength(FConflictBtns[i + 1][j + 1], Length(FConflictBtns[i + 1][j
-      + 1]) + 1);
-    FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
-    FConflicts[i][j][High(FConflicts[i][j])] :=
-      ConflictTypesContainer.GetConflicts(StrToInt(FIDs[i][j][High(FIDs[i][j])]));
-    for k := 3 to SQLQuery.FieldCount - 1 do
-      if DisplayedFieldsCLB.Checked[k - 3] then
-      begin
-        SetLength(t[High(t)], Length(t[High(t)]) + 1);
-        t[High(t)][High(t[High(t)])] := '';
-        if DisplayedNamesCLB.Checked[k - 3] then
-          t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].DisplayName
-            + ': ';
-        t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].AsString;
-      end;
+    s := SQLQuery.FieldByName(Metadata.PeriodStartCol.DisplayName).AsDateTime;
+    e := SQLQuery.FieldByName(Metadata.PeriodEndCol.DisplayName).AsDateTime;
+    step := SQLQuery.FieldByName(Metadata.RepeatPeriod.DisplayName).AsInteger;
+    wd := SQLQuery.FieldByName(Metadata.WeekdayCol.DisplayName).AsInteger;
+    c := StartDateDE.Date;
+    step := (7 * step) div myGCD(7, step);
+    while DayOfTheWeek(s) <> wd do
+      s := IncDay(s, 1);
+    if (DaysBetween(c, s) mod step <> 0) and (c > s) then
+      c := IncDay(s, ceil(DaysBetween(c, s) / step) * step)
+    else if (c < s) then
+      c := s;
+    while c < e do
+    begin
+      AFilledRows[i] := True;
+      AFilledCols[j] := True;
+      SetLength(t, Length(t) + 1);
+      SetLength(FIDs[i][j], Length(FIDs[i][j]) + 1);
+      SetLength(FConflicts[i][j], Length(FConflicts[i][j]) + 1);
+      SetLength(FConflictBtns[i + 1][j + 1], Length(FConflictBtns[i + 1][j
+        + 1]) + 1);
+      FIDs[i][j][High(FIDs[i][j])] := SQLQuery.Fields[0].AsString;
+      FConflicts[i][j][High(FConflicts[i][j])] :=
+        ConflictTypesContainer.GetConflicts(StrToInt(FIDs[i][j][High(FIDs[i][j])]));
+      for k := ServiceCols to SQLQuery.FieldCount - 1 do
+        if DisplayedFieldsCLB.Checked[k - ServiceCols] then
+        begin
+          SetLength(t[High(t)], Length(t[High(t)]) + 1);
+          t[High(t)][High(t[High(t)])] := '';
+          if DisplayedNamesCLB.Checked[k - ServiceCols] then
+            t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].DisplayName
+              + ': ';
+          t[High(t)][High(t[High(t)])] += SQLQuery.Fields[k].AsString;
+        end;
+      SetLength(t[High(t)], Length(t[High(t)]) + 1);
+      t[High(t)][High(t[High(t)])] := Format('Date: %s', [DateToStr(c)]);
+      c := IncDay(c, step);
+    end;
     SQLQuery.Next;
   end;
   FData[i][j] := t;
