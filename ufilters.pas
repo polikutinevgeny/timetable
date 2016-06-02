@@ -5,8 +5,8 @@ unit UFilters;
 interface
 
 uses
-  Classes, SysUtils, UMetadata, Forms, StdCtrls,
-  Buttons, Graphics;
+  Classes, SysUtils, UMetadata, Forms, StdCtrls, EditBtn, DateTimeCtrls, DateTimePicker,
+  Buttons, Graphics, dateutils;
 
 type
   { TRemoveButton }
@@ -26,11 +26,15 @@ type
       FOnFilterRemove: TFilterRemoveEvent;
       FColumnCB: TComboBox;
       FActionCB: TComboBox;
-      FValueTE: TEdit;
+      FStringTE: TEdit;
+      FDateDE: TDateEdit;
+      FIntegerTE: TEdit;
+      FTimeDTP: TDateTimePicker;
       FRemoveBtn: TRemoveButton;
       FTable: TTable;
       FCols: TColArray;
       FEnabled: Boolean;
+      FLastType: TColDataType;
       function GetCol: TCol;
       function GetAction: String;
       function GetValue: String;
@@ -38,14 +42,18 @@ type
       procedure FilterRemove(Sender: TObject);
       procedure CreateColumnCB(AScrollbox: TScrollBox; ACols: array of TCol);
       procedure CreateActionCB(AScrollbox: TScrollBox);
-      procedure CreateValueTE(AScrollbox: TScrollBox);
+      procedure CreateStringTE(AScrollbox: TScrollBox);
+      procedure CreateIntegerTE(AScrollbox: TScrollBox);
+      procedure CreateDateTE(AScrollbox: TScrollBox);
+      procedure CreateTimeTE(AScrollbox: TScrollBox);
       procedure CreateRemoveBtn(AScrollbox: TScrollBox);
+      procedure SelectEditor;
     public
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
         ACols: array of TCol; AEnabled: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
-      procedure SetupHiddenFilter(AValueTEValue: String; AAction: String = '=');
-      procedure SetupHiddenFilter(AValueTEValues: array of Integer);
+      procedure SetupHiddenFilter(AValue: String; AAction: String = '=');
+      procedure SetupHiddenFilter(AValues: array of Integer);
       function Copy(AScrollbox: TScrollBox): TFilter;
       property Visible: Boolean read FEnabled;
       property Column: TCol read GetCol;
@@ -98,11 +106,19 @@ end;
 
 function TFilter.GetValue: String;
 begin
-  Result := FValueTE.Text;
+  if FColumnCB.ItemIndex = -1 then
+    raise TActionException.Create('Please, select column');
+  case FCols[FColumnCB.ItemIndex].DataType of
+    cdtDate: Result := FormatDateTime('DD-MM-YYYY', FDateDE.Date);
+    cdtInteger: Result := FIntegerTE.Text;
+    cdtString: Result := FStringTE.Text;
+    cdtTime: Result := FormatDateTime('HH:MM:SS.ZZZZ', FTimeDTP.Time);
+  end;
 end;
 
 procedure TFilter.FilterUpdate(Sender: TObject);
 begin
+  SelectEditor;
   if FEnabled then
     OnFilterUpdate;
 end;
@@ -151,10 +167,10 @@ begin
   end;
 end;
 
-procedure TFilter.CreateValueTE(AScrollbox: TScrollBox);
+procedure TFilter.CreateStringTE(AScrollbox: TScrollBox);
 begin
-  FValueTE := TEdit.Create(AScrollbox);
-  with FValueTE do
+  FStringTE := TEdit.Create(AScrollbox);
+  with FStringTE do
   begin
     Visible := False;
     Text := '';
@@ -162,6 +178,51 @@ begin
     OnChange := @FilterUpdate;
     Enabled := FEnabled;
     Parent := AScrollbox;
+  end;
+end;
+
+procedure TFilter.CreateIntegerTE(AScrollbox: TScrollBox);
+begin
+  FIntegerTE := TEdit.Create(AScrollbox);
+  with FIntegerTE do
+  begin
+    Visible := False;
+    Text := '';
+    Width := 300;
+    OnChange := @FilterUpdate;
+    Enabled := FEnabled;
+    Parent := AScrollbox;
+    NumbersOnly := True;
+  end;
+end;
+
+procedure TFilter.CreateDateTE(AScrollbox: TScrollBox);
+begin
+  FDateDE := TDateEdit.Create(AScrollbox);
+  with FDateDE do
+  begin
+    Visible := False;
+    Date := Today;
+    Width := 300;
+    OnChange := @FilterUpdate;
+    Enabled := FEnabled;
+    Parent := AScrollbox;
+  end;
+end;
+
+procedure TFilter.CreateTimeTE(AScrollbox: TScrollBox);
+begin
+  FTimeDTP := TDateTimePicker.Create(AScrollbox);
+  with FTimeDTP do
+  begin
+    Visible := False;
+    Kind := dtkTime;
+    DateMode := dmUpDown;
+    DateSeparator := '.';
+    Time := StrToTime('00:00');
+    Parent := AScrollbox;
+    Enabled := FEnabled;
+    OnChange := @FilterUpdate;
   end;
 end;
 
@@ -183,13 +244,36 @@ begin
   end;
 end;
 
+procedure TFilter.SelectEditor;
+begin
+  if FColumnCB.ItemIndex = -1 then
+    Exit;
+  if FCols[FColumnCB.ItemIndex].DataType = FLastType then
+    Exit;
+  FDateDE.Visible := False;
+  FIntegerTE.Visible := False;
+  FStringTE.Visible := False;
+  FTimeDTP.Visible := False;
+  case FCols[FColumnCB.ItemIndex].DataType of
+    cdtDate: FDateDE.Visible := True;
+    cdtInteger: FIntegerTE.Visible := True;
+    cdtString: FStringTE.Visible := True;
+    cdtTime: FTimeDTP.Visible := True;
+  end;
+  FLastType := FCols[FColumnCB.ItemIndex].DataType;
+end;
+
 constructor TFilter.Create(AScrollbox: TScrollBox; ATable: TTable;
   ACols: array of TCol; AEnabled: Boolean);
 begin
   FEnabled := AEnabled;
+  FLastType := cdtNull;
   CreateColumnCB(AScrollbox, ACols);
   CreateActionCB(AScrollbox);
-  CreateValueTE(AScrollbox);
+  CreateStringTE(AScrollbox);
+  CreateDateTE(AScrollbox);
+  CreateIntegerTE(AScrollbox);
+  CreateTimeTE(AScrollbox);
   CreateRemoveBtn(AScrollbox);
   Draw(AScrollbox);
   FTable := ATable;
@@ -201,32 +285,43 @@ begin
   FColumnCB.Left := 20;
   FActionCB.Top := UpperPadding + AScrollbox.Tag * Interval;
   FActionCB.Left := 180;
-  FValueTE.Top := UpperPadding + AScrollbox.Tag * Interval;
-  FValueTE.Left := 270;
   FRemoveBtn.Top := UpperPadding + AScrollbox.Tag * Interval;
   FRemoveBtn.Left := 590;
+  FStringTE.Top := UpperPadding + AScrollbox.Tag * Interval;
+  FStringTE.Left := 270;
+  FTimeDTP.Top := UpperPadding + AScrollbox.Tag * Interval;
+  FTimeDTP.Left := 270;
+  FDateDE.Top := UpperPadding + AScrollbox.Tag * Interval;
+  FDateDE.Left := 270;
+  FIntegerTE.Top := UpperPadding + AScrollbox.Tag * Interval;
+  FIntegerTE.Left := 270;
   FColumnCB.Visible := True;
   FActionCB.Visible := True;
-  FValueTE.Visible := True;
   FRemoveBtn.Visible := True;
+  SelectEditor;
   AScrollbox.Tag := AScrollbox.Tag + 1;
 end;
 
-procedure TFilter.SetupHiddenFilter(AValueTEValue: String; AAction: String);
+procedure TFilter.SetupHiddenFilter(AValue: String; AAction: String);
 begin
   FActionCB.ItemIndex := FActionCB.Items.IndexOf(AAction);
   FColumnCB.ItemIndex := 0;
-  FValueTE.Text := AValueTEValue;
+  case FCols[FColumnCB.ItemIndex].DataType of
+    cdtDate: FDateDE.Date := StrToDate(AValue);
+    cdtInteger: FIntegerTE.Text := AValue;
+    cdtString: FStringTE.Text := AValue;
+    cdtTime: FTimeDTP.Time := StrToTime(AValue);
+  end;
 end;
 
-procedure TFilter.SetupHiddenFilter(AValueTEValues: array of Integer);
+procedure TFilter.SetupHiddenFilter(AValues: array of Integer);
 var i: Integer;
 begin
   FActionCB.ItemIndex := FActionCB.Items.IndexOf('IN');
   FColumnCB.ItemIndex := 0;
-  FValueTE.Text := IntToStr(AValueTEValues[0]);
-  for i := 1 to High(AValueTEValues) do
-    FValueTE.Text := FValueTE.Text + ',' + IntToStr(AValueTEValues[i]);
+  FIntegerTE.Text := IntToStr(AValues[0]);
+  for i := 1 to High(AValues) do
+    FIntegerTE.Text := FIntegerTE.Text + ',' + IntToStr(AValues[i]);
 end;
 
 function TFilter.Copy(AScrollbox: TScrollBox): TFilter;
@@ -234,15 +329,21 @@ begin
   Result := TFilter.Create(AScrollbox, FTable, FCols);
   Result.FActionCB.ItemIndex := FActionCB.ItemIndex;
   Result.FColumnCB.ItemIndex := FColumnCB.ItemIndex;
-  Result.FValueTE.Text := FValueTE.Text;
+  Result.FStringTE.Text := FStringTE.Text;
+  Result.FIntegerTE.Text := FIntegerTE.Text;
+  Result.FDateDE.Date := FDateDE.Date;
+  Result.FTimeDTP.Time := FTimeDTP.Time;
 end;
 
 destructor TFilter.Destroy;
 begin
   FActionCB.Free;
   FColumnCB.Free;
-  FValueTE.Free;
+  FStringTE.Free;
   FRemoveBtn.Free;
+  FDateDE.Free;
+  FIntegerTE.Free;
+  FTimeDTP.Free;
 end;
 
 initialization

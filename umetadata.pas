@@ -9,7 +9,7 @@ uses
 
 type
 
-  TColDataType = (cdtInteger, cdtDate, cdtTime, cdtString);
+  TColDataType = (cdtNull, cdtInteger, cdtDate, cdtTime, cdtString);
 
   TTable = class;
   TCol = class;
