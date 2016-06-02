@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, UMetadata, Forms, StdCtrls, EditBtn, DateTimeCtrls, DateTimePicker,
-  Buttons, Graphics, dateutils;
+  Buttons, Graphics, dateutils, Dialogs;
 
 type
   { TRemoveButton }
@@ -112,7 +112,7 @@ begin
     cdtDate: Result := FormatDateTime('DD-MM-YYYY', FDateDE.Date);
     cdtInteger: Result := FIntegerTE.Text;
     cdtString: Result := FStringTE.Text;
-    cdtTime: Result := FormatDateTime('HH:MM:SS.ZZZZ', FTimeDTP.Time);
+    cdtTime: Result := FormatDateTime('HH:MM:SS', FTimeDTP.Time);
   end;
 end;
 
