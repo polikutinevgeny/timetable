@@ -550,8 +550,7 @@ end;
 
 procedure TTimetableWindow.OpenAsDirectory(ARow: Integer; ACol: Integer);
 var
-  cf: TFilter;
-  rf: TFilter;
+  cf, rf, dsf, def: TFilter;
   df: TDirectoryForm;
 begin
   df := TDirectoryForm.Create(Application, Metadata.TimetableTable);
@@ -563,7 +562,11 @@ begin
     (HorizontalCB.Items.Objects[HorizontalCB.ItemIndex] as TCol).Table.PrimaryKey],
     False);
   rf.SetupHiddenFilter(FColIDs[ACol - 1]);
-  df.SetHiddenFilters([rf, cf]);
+  dsf := TFilter.Create(df.FilterSB, Metadata.PeriodStartCol.Table, [Metadata.PeriodStartCol], False);
+  dsf.SetupHiddenFilter(FormatDateTime('DD-MM-YYYY', EndDateDE.Date), '<=');
+  def := TFilter.Create(df.FilterSB, Metadata.PeriodEndCol.Table, [Metadata.PeriodEndCol], False);
+  def.SetupHiddenFilter(FormatDateTime('DD-MM-YYYY', StartDateDE.Date), '>=');
+  df.SetHiddenFilters([rf, cf, dsf, def]);
   df.Show;
 end;
 

@@ -44,7 +44,7 @@ type
       constructor Create(AScrollbox: TScrollBox; ATable: TTable;
         ACols: array of TCol; AEnabled: Boolean = True);
       procedure Draw(AScrollbox: TScrollBox);
-      procedure SetupHiddenFilter(AValueTEValue: String);
+      procedure SetupHiddenFilter(AValueTEValue: String; AAction: String = '=');
       procedure SetupHiddenFilter(AValueTEValues: array of Integer);
       function Copy(AScrollbox: TScrollBox): TFilter;
       property Visible: Boolean read FEnabled;
@@ -212,9 +212,9 @@ begin
   AScrollbox.Tag := AScrollbox.Tag + 1;
 end;
 
-procedure TFilter.SetupHiddenFilter(AValueTEValue: String);
+procedure TFilter.SetupHiddenFilter(AValueTEValue: String; AAction: String);
 begin
-  FActionCB.ItemIndex := FActionCB.Items.IndexOf('=');
+  FActionCB.ItemIndex := FActionCB.Items.IndexOf(AAction);
   FColumnCB.ItemIndex := 0;
   FValueTE.Text := AValueTEValue;
 end;

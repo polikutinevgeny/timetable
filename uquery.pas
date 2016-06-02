@@ -457,7 +457,9 @@ begin
   for i := 0 to High(FTable.Cols) - 1 do
     Result += FTable.Cols[i].SQLName + ', ';
   if Length(FTable.ForeignKeys) = 0 then
-    Result += FTable.Cols[High(FTable.Cols)].SQLName + ' ) ';
+    Result += FTable.Cols[High(FTable.Cols)].SQLName + ' ) '
+  else
+    Result += FTable.Cols[High(FTable.Cols)].SQLName + ', ';
   for i := 0 to High(FTable.ForeignKeys) - 1 do
     Result += FTable.ForeignKeys[i].SQLName + ', ';
   if Length(FTable.ForeignKeys) <> 0 then
@@ -466,7 +468,9 @@ begin
   for i := 0 to High(FTable.Cols) - 1 do
     Result += ':' + FTable.Cols[i].SQLName + ', ';
   if Length(FTable.ForeignKeys) = 0 then
-    Result += ':' + FTable.Cols[High(FTable.Cols)].SQLName + ' )';
+    Result += ':' + FTable.Cols[High(FTable.Cols)].SQLName + ' )'
+  else
+    Result += ':' + FTable.Cols[High(FTable.Cols)].SQLName + ', ';
   for i := 0 to High(FTable.ForeignKeys) - 1 do
     Result += ':' + FTable.ForeignKeys[i].SQLName + ', ';
   if Length(FTable.ForeignKeys) <> 0 then
@@ -481,7 +485,10 @@ begin
     Result += FTable.Cols[i].SQLName + '=:' + FTable.Cols[i].SQLName + ', ';
   if Length(FTable.ForeignKeys) = 0 then
     Result += FTable.Cols[High(FTable.Cols)].SQLName + '=:' +
-      FTable.Cols[High(FTable.Cols)].SQLName;
+      FTable.Cols[High(FTable.Cols)].SQLName
+  else
+    Result += FTable.Cols[High(FTable.Cols)].SQLName + '=:' +
+      FTable.Cols[High(FTable.Cols)].SQLName + ', ';
   for i := 0 to High(FTable.ForeignKeys) - 1 do
     Result += FTable.ForeignKeys[i].SQLName + '=:' +
       FTable.ForeignKeys[i].SQLName + ', ';
