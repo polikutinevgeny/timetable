@@ -316,12 +316,12 @@ begin
     GetSelectAsText(AVertColumn, AHorizColumn), GetFromAsText]);
   s := GetFiltersAsText;
   if s <> '' then
-    Result += Format('%s AND %s.%s < ''%s'' AND %s.%s > ''%s'' ', [s,
+    Result += Format('%s AND %s.%s <= ''%s'' AND %s.%s >= ''%s'' ', [s,
       Metadata.PeriodStartCol.Table.SQLName, Metadata.PeriodStartCol.SQLName,
       FormatDateTime('DD.MM.YYYY', AEndDate), Metadata.PeriodEndCol.Table.SQLName,
       Metadata.PeriodEndCol.SQLName, FormatDateTime('DD.MM.YYYY', AStartDate)])
   else
-    Result += Format('WHERE %s.%s < ''%s'' AND %s.%s > ''%s'' ', [
+    Result += Format('WHERE %s.%s <= ''%s'' AND %s.%s >= ''%s'' ', [
       Metadata.PeriodStartCol.Table.SQLName, Metadata.PeriodStartCol.SQLName,
       FormatDateTime('DD.MM.YYYY', AEndDate), Metadata.PeriodEndCol.Table.SQLName,
       Metadata.PeriodEndCol.SQLName, FormatDateTime('DD.MM.YYYY', AStartDate)]);
