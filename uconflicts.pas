@@ -191,15 +191,13 @@ end;
 
 procedure TCapacityConflictType.RefreshConflicts;
 var
-  i, total, curcap: Integer;
-  cvs: TStringArray;
-  ccids: array of Integer;
-  eqok: Boolean;
+  total, curcap: Integer;
   heap: TIDDateCapacityBinaryHeap;
 
   procedure NewConflict;
   var
     j: Integer;
+    ccids: array of Integer;
   begin
     if total > curcap then
     begin
@@ -211,6 +209,10 @@ var
     end;
   end;
 
+var
+  cvs: TStringArray;
+  eqok: Boolean;
+  i: Integer;
 begin
   heap := TIDDateCapacityBinaryHeap.Create;
   SetLength(Conflicts, 0);
